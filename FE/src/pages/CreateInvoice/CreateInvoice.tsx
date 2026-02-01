@@ -12,6 +12,7 @@ import { useRef, useState } from "react";
 import request from "../../api/request";
 export default function CreatePost() {
   const debounceRef = useRef<number | null>(null);
+  const [checkComName, setCheckComName] = useState("");
   const [searchName, setSearchName] = useState("");
   const [formData, setFormData] = useState({
     companyName: "",
@@ -106,11 +107,13 @@ export default function CreatePost() {
 
         if (!res.data || res.data.length === 0) {
           // console.log("No sales unit data found for:", value);
+   
+          console.log("No sales unit data found");
           return;
         }
 
         const company = res.data[0];
-
+        // console.log("FETCHED COMPANY DATA:", company);
         setFormData((prev) => ({
           ...prev,
           companyName: company.companyName || "",
@@ -140,6 +143,12 @@ export default function CreatePost() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     console.log("FORM DATA:", formData);
+    //luuw ys -->
+    if(formData.companyName===""){
+      setCheckComName("Không thể để trống tên công ty");
+      console.log("CHECK COMPANY NAME:", checkComName);
+      return;
+    }
     setFormData({
       //saleunit
       companyName: "",
@@ -172,7 +181,7 @@ export default function CreatePost() {
             <div className="grid grid-cols-2 md:grid-cols-2 gap-6">
               {/* //cột lớn 1   Thông tin bên bán hàng */}
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-2 gap-4 bg-amber-200">
                 <div className="space-y-2 md:col-span-2">
                   <Label htmlFor="searchName" className="">
                     Tìm kiếm đơn vị bán hàng
@@ -187,26 +196,30 @@ export default function CreatePost() {
                 </div>
                 {/* Tên công ty */}
                 <div className="space-y-2">
-                  <Label htmlFor="companyName">Tên công ty</Label>
-                  <Input
-                    name="companyName"
-                    id="companyName"
-                    value={formData.companyName}
-                    onChange={handleChange}
-                    placeholder="Tên công ty"
-                  />
+                  <Label>Tên công ty: {formData.companyName}</Label>
                 </div>
-
                 {/* SĐT */}
                 <div className="space-y-2">
                   <Label htmlFor="phone">SĐT</Label>
-                  <Input
+                  {!formData.phone ? (
+                    <Input
+                      name="phone"
+                      type="number"
+                      id="phone"
+                      value={formData.phone}
+                      onChange={handleChange}
+                      placeholder="SDT"
+                    />
+                  ) : (
+                    formData.phone
+                  )}
+                  {/* <Input
                     name="phone"
                     id="phone"
                     value={formData.phone}
                     onChange={handleChange}
                     placeholder="Số điện thoại"
-                  />
+                  /> */}
                 </div>
 
                 {/* Email */}
@@ -214,6 +227,7 @@ export default function CreatePost() {
                   <Label htmlFor="email">Email</Label>
                   <Input
                     name="email"
+                    type="email"
                     id="email"
                     value={formData.email}
                     onChange={handleChange}
@@ -245,6 +259,13 @@ export default function CreatePost() {
                   />
                 </div>
 
+                {/* Button thêm công ty  */}
+                {/* <div className="space-y-2 pt-5">
+                  <Button type="submit" className="w-full" >
+                    Thêm
+                  </Button>
+                </div> */}
+
                 {/* Địa chỉ – chiếm 2 cột */}
                 <div className="space-y-2 md:col-span-2">
                   <Label htmlFor="address">Địa chỉ</Label>
@@ -259,7 +280,7 @@ export default function CreatePost() {
               </div>
 
               {/* //cột lớn 2 Thông tin sản phẩm */}
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-2 gap-4 bg-amber-700/20">
                 {/* Mã sản phẩm */}
                 <div className="space-y-2">
                   <Label htmlFor="productCode">Mã sản phẩm</Label>
@@ -289,6 +310,7 @@ export default function CreatePost() {
                   <Label htmlFor="quantity">Số lượng</Label>
                   <Input
                     name="quantity"
+                    type="number"
                     id="quantity"
                     value={formData.quantity}
                     onChange={handleChange}
@@ -301,6 +323,7 @@ export default function CreatePost() {
                   <Label htmlFor="price">Giá</Label>
                   <Input
                     name="price"
+                    type="number"
                     id="price"
                     value={formData.price}
                     onChange={handleChange}
@@ -311,8 +334,10 @@ export default function CreatePost() {
                 {/* Tổng Tiền */}
                 <div className="space-y-2">
                   <Label htmlFor="totalAmount">Tổng tiền</Label>
+
                   <Input
                     name="totalAmount"
+                    type="number"
                     id="totalAmount"
                     value={formData.totalAmount}
                     onChange={handleChange}
@@ -325,6 +350,7 @@ export default function CreatePost() {
                   <Label htmlFor="guarantee">Bảo hành (Tháng)</Label>
                   <Input
                     name="guarantee"
+                    type="number"
                     id="guarantee"
                     value={formData.guarantee}
                     onChange={handleChange}
