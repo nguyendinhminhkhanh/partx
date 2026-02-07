@@ -5,7 +5,7 @@ const InvoiceModel = require("./invoice");
 const createInvoice = async (req, res) => {
   // Logic to create an invoice
   //lấy idSaleUnit thừ ô tim kiem theo tên công ty
-  const idSaleUnit = "697a26073c7ee231f34c1442"; // Example SaleUnit ID
+  const idSaleUnit = "6980c2eb6d2dd97b543839d0"; // Example SaleUnit ID
   const { productCode, productName, quantity, price, totalAmount, guarantee } =
     req.body;
   const newInvoice = await InvoiceModel.create({
@@ -25,8 +25,36 @@ const createInvoice = async (req, res) => {
   });
 };
 
-
-
+//[GET] /api/invoice
+//!!
+const getAllInvoice = async (req, res) => {
+  try {
+    const { createdBy, keyword } = req.query;
+    const createByFilter = createdBy ? { createdBy } : {};
+    const keywordFilter = keyword
+      ? {
+          $or: [
+            { title: { $regex: new RegExp(`${keyword}`, "i") } },
+            { description: { $regex: new RegExp(`${keyword}`, "i") } },
+          ],
+        }
+      : {};
+    const filter = {
+      ...createByFilter,
+      ...keywordFilter,
+    };
+    const invoice = await InvoiceModel.find(filter)
+      .populate("createdBy")
+      .sort({ createdAt: -1 });
+    res.send({ success: 1, data: invoice });
+  } catch (error) {
+    res.status(400).send({
+      success: 0,
+      data: null,
+      message: error.message || "Something went wrong",
+    });
+  }
+};
 
 //[GET] /api/invoice/:id
 const getInvoiceById = async (req, res) => {
@@ -42,5 +70,6 @@ const getInvoiceById = async (req, res) => {
 
 module.exports = {
   createInvoice,
+  getAllInvoice,
   getInvoiceById,
 };

@@ -16,24 +16,27 @@ import { Link, useNavigate } from "react-router-dom";
 interface Login {
   username: string;
   password: string;
+  fullName: string;
+  email: string;
+  phone: number;
 }
 
-export default function Login() {
+export default function Register() {
   const { register, handleSubmit } = useForm<Login>();
-  const navigate = useNavigate();
+  const navigator = useNavigate();
   const onSubmit = async (data: Login) => {
-    const { username, password } = data;
+    const { username, password, fullName, email, phone } = data;
     try {
       const res = await request({
         method: "POST",
-        url: "/auth/login",
-        data: { username, password },
+        url: "/auth/register",
+        data: { username, password, fullName, email, phone },
       });
-      toast.success("Đăng nhập thành công.");
-      navigate("/");
+      toast.success("Đăng kí thành công!");
       console.log(res);
+      navigator("/");
     } catch (error) {
-      alert("Đănh nhập thất bại ");
+      alert("Đăng kí thất bại ");
       console.log(error);
     }
   };
@@ -49,7 +52,16 @@ export default function Login() {
         </CardHeader>
         <form onSubmit={handleSubmit(onSubmit)}>
           <CardContent className="space-y-4">
-            {/* Email */}
+            {/* FullNam */}
+            <div className="space-y-2">
+              <Label htmlFor="fullName">Họ và tên</Label>
+              <Input
+                id="fullName"
+                type="text"
+                {...register("fullName", { required: true })}
+              />
+            </div>
+            {/* User name */}
             <div className="space-y-2">
               <Label htmlFor="username">Tên đăng nhập</Label>
               <Input
@@ -57,6 +69,27 @@ export default function Login() {
                 type="text"
                 {...register("username", { required: true })}
                 placeholder="example"
+              />
+            </div>
+            {/* email */}
+            <div className="space-y-2">
+              <Label htmlFor="email">Email</Label>
+              <Input
+                id="email"
+                type="email"
+                {...register("email", { required: true })}
+                placeholder="example@gmail.com"
+              />
+            </div>
+
+            {/* email */}
+            <div className="space-y-2">
+              <Label htmlFor="phone">Số điện thoại</Label>
+              <Input
+                id="phone"
+                type="text"
+                {...register("phone", { required: true })}
+                placeholder="+84"
               />
             </div>
 
@@ -73,17 +106,17 @@ export default function Login() {
 
             {/* Button */}
             <Button type="submit" className="w-full">
-              Đăng nhập
+              Đăng kí
             </Button>
 
             {/* Footer */}
             <div className="text-center text-sm text-muted-foreground">
-              Chưa có tài khoản?{" "}
+              Đã có tài khoản?{" "}
               <Link
-                to="/register"
+                to="/login"
                 className="font-medium text-primary hover:underline"
               >
-                Đăng ký
+                Đăng nhập
               </Link>
             </div>
           </CardContent>
