@@ -2,22 +2,33 @@ const mongoose = require("mongoose");
 const InvoiceModel = require("./invoice");
 
 //[POST] /api/invoice/create
+// Logic to create an invoice
 const createInvoice = async (req, res) => {
-  // Logic to create an invoice
-  //lấy idSaleUnit thừ ô tim kiem theo tên công ty
-  const idSaleUnit = "6980c2eb6d2dd97b543839d0"; // Example SaleUnit ID
-  const { productCode, productName, quantity, price, totalAmount, guarantee } =
-    req.body;
+  const { productCode, productName, quantity, price, guarantee, createdBy } = req.body;
+  const q = Number(quantity);
+  const p = Number(price);
+  if (!Number.isFinite(q) || !Number.isFinite(p)) {
+    return res.status(400).json({
+      success: 0,
+      message: "Quantity và price phải là số",
+    });
+  }
+  if (q <= 0 || p <= 0) {
+    return res.status(400).json({
+      success: 0,
+      message: "Quantity và price phải > 0",
+    });
+  }
+  const totalAmount = q * p;
   const newInvoice = await InvoiceModel.create({
     productCode,
     productName,
-    quantity,
-    price,
+    quantity: q,
+    price: p,
     totalAmount,
     guarantee,
-    createdBy: idSaleUnit,
+    createdBy,
   });
-
   console.log("New Invoice Created:", newInvoice);
   res.send({
     success: 1,

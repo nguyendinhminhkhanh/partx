@@ -33,7 +33,7 @@ const NAV_ITEMS = [
       { label: "Đơn vị bán hàng", to: "/createsaleunit" },
     ],
   },
-  { label: "Xuất hàng", to: "/123" },
+  { label: "PageTEst", to: "/pagetest" },
 ];
 
 export default function Navbar() {

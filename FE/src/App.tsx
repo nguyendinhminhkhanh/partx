@@ -6,6 +6,7 @@ import Home from "./pages/Home";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import InvoiceList from "./pages/InvoiceList";
+import PageTest from "./pages/PageTest";
 
 function App() {
   return (
@@ -15,7 +16,11 @@ function App() {
         <Route path="/" element={<Home></Home>}></Route>
         <Route path="/login" element={<Login></Login>}></Route>
         <Route path="/register" element={<Register></Register>}></Route>
-        <Route path="/invoicelist" element={<InvoiceList></InvoiceList>}></Route>
+        <Route
+          path="/invoicelist"
+          element={<InvoiceList></InvoiceList>}
+        ></Route>
+        <Route path="/pagetest" element={<PageTest></PageTest>}></Route>
         <Route
           path="/createsaleunit"
           element={<CreateSaleUnit></CreateSaleUnit>}

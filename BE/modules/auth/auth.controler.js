@@ -2,6 +2,7 @@ const UserModel = require("./user");
 const bcrypt = require("bcryptjs");
 const tokenProvider = require("../../common/tokenProvider");
 const HttpError = require("../../common/httpError");
+
 // [POST] /api/auth/login
 const login = async (req, res) => {
   const { username, password } = req.body;

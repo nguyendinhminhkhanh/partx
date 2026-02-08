@@ -33,7 +33,7 @@ export default function Login() {
       navigate("/");
       console.log(res);
     } catch (error) {
-      alert("Đănh nhập thất bại ");
+      toast.error("Thông tin đăng nhập không chính xác.");
       console.log(error);
     }
   };
