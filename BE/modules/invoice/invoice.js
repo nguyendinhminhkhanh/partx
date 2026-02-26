@@ -3,6 +3,10 @@ const mongoose = require("mongoose");
 //hóa đơn bán hàng
 const InvoiceSchema = mongoose.Schema(
   {
+    imageUrl: {
+      type: String,
+      require: true,
+    },
     productCode: { type: String },
     productName: { type: String, required: true },
     quantity: { type: Number, required: true },

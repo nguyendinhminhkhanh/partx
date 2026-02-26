@@ -4,7 +4,7 @@ const InvoiceModel = require("./invoice");
 //[POST] /api/invoice/create
 // Logic to create an invoice
 const createInvoice = async (req, res) => {
-  const { productCode, productName, quantity, price, guarantee, createdBy } = req.body;
+  const { imageUrl, productCode, productName, quantity, price, guarantee, createdBy } = req.body;
   const q = Number(quantity);
   const p = Number(price);
   if (!Number.isFinite(q) || !Number.isFinite(p)) {
@@ -21,6 +21,7 @@ const createInvoice = async (req, res) => {
   }
   const totalAmount = q * p;
   const newInvoice = await InvoiceModel.create({
+    imageUrl,
     productCode,
     productName,
     quantity: q,

@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { MainLayout } from "../components/Layout";
 import { Button } from "../components/ui/button";
 import {
@@ -54,6 +54,16 @@ export const MOCK_COMPANIES = [
 ];
 
 export default function PageTest() {
+  const fileInputRef = useRef(null);
+  const [preview, setPreview] = useState(null);
+
+  const handleFileChange = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    setPreview(URL.createObjectURL(file));
+  };
+
   const [companyName, setCompanyName] = useState("");
   const results = useMemo(() => {
     if (!companyName.trim()) return [];
@@ -64,6 +74,40 @@ export default function PageTest() {
   }, [companyName]);
   return (
     <MainLayout>
+      <div>
+        <input
+          type="file"
+          accept="image/*"
+          ref={fileInputRef}
+          onChange={handleFileChange}
+          style={{ display: "none" }}
+        />
+        <button type="button" onClick={() => fileInputRef.current.click()}>
+          <label
+            htmlFor="image"
+            className="flex flex-col items-center justify-center border-2 border-dashed rounded-lg p-6 cursor-pointer hover:bg-muted transition"
+          >
+            {/* {previewImage ? (
+                      <img
+                        src={previewImage}
+                        alt="preview"
+                        className="h-32 w-32 object-cover rounded-md"
+                      />
+                    ) : ( */}
+            <span className="text-sm text-muted-foreground">
+              Click to upload image
+            </span>
+            {/* )} */}
+          </label>
+        </button>
+
+        {preview && (
+          <div style={{ marginTop: 20 }}>
+            <img src={preview} alt="preview" width="200" />
+          </div>
+        )}
+      </div>
+
       <Dialog>
         <form>
           <div className="flex justify-end m-4 text-sm">
@@ -87,7 +131,7 @@ export default function PageTest() {
                   placeholder="Tên công ty"
                 />
               </Field>
-              
+
               <Command className="border rounded-md">
                 <CommandInput
                   placeholder="Tìm công ty..."

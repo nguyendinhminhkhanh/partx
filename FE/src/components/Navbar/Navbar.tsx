@@ -1,5 +1,11 @@
-import { useState } from "react";
+import { useContext, useState } from "react";
+import { AuthContext } from "../../hook/useAuth";
 import { Button } from "../../components/ui/button";
+import {
+  Avatar,
+  AvatarImage,
+  AvatarFallback,
+} from "../../components/ui/avatar";
 import {
   Sheet,
   SheetContent,
@@ -8,12 +14,19 @@ import {
   SheetTrigger,
   SheetDescription,
 } from "../../components/ui/sheet";
-import { Menu } from "lucide-react";
+import {
+  CreditCardIcon,
+  LogOutIcon,
+  Menu,
+  SettingsIcon,
+  UserIcon,
+} from "lucide-react";
 import { NavLink, Link, useLocation } from "react-router-dom";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "../../components/ui/dropdown-menu";
 
@@ -37,12 +50,25 @@ const NAV_ITEMS = [
 ];
 
 export default function Navbar() {
+  const auth = useContext(AuthContext);
   const [open, setOpen] = useState(false);
   const location = useLocation();
+
+  if (auth === null) {
+    // Có thể return null, loading, hoặc throw error
+    throw new Error("AuthContext must be used within AuthProvider");
+  }
+  const { user, setUser } = auth;
 
   const isParentActive = (children?: { to: string }[]) => {
     if (!children) return false;
     return children.some((child) => location.pathname.startsWith(child.to));
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem("token");
+    setUser(null);
+    console.log("Logout");
   };
 
   return (
@@ -94,9 +120,30 @@ export default function Navbar() {
 
         {/* Desktop actions */}
         <div className="hidden md:flex gap-2">
-          <Button>
-            <Link to="/login">Đăng xuất</Link>
-          </Button>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline">{user?.fullName}</Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent>
+              <DropdownMenuItem>
+                <UserIcon />
+                Profile
+              </DropdownMenuItem>
+              <DropdownMenuItem>
+                <CreditCardIcon />
+                Billing
+              </DropdownMenuItem>
+              <DropdownMenuItem>
+                <SettingsIcon />
+                Settings
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={handleLogout} variant="destructive">
+                <LogOutIcon />
+                <Link to="/login">Đăng xuất</Link>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
 
         {/* Mobile menu */}
@@ -108,11 +155,23 @@ export default function Navbar() {
           </SheetTrigger>
 
           <SheetContent side="right" className="w-72 p-6">
-            <SheetHeader>
-              <SheetTitle>User Name</SheetTitle>
-              <SheetDescription>
-                Chỗ này cần điền mô tả gì đó
-              </SheetDescription>
+            <SheetHeader className="flex flex-row items-center gap-4">
+              <Avatar className="w-20 h-20 ring-2 ring-primary ring-offset-2">
+                <AvatarImage
+                  src="https://i.pravatar.cc/150?img=12"
+                  alt="Demo User"
+                />
+                <AvatarFallback>U</AvatarFallback>
+              </Avatar>
+
+              <div className="flex flex-col">
+                <SheetTitle className="text-lg font-semibold">
+                  {user?.fullName}
+                </SheetTitle>
+                <SheetDescription className="text-sm hidden text-muted-foreground">
+                  Chỗ này cần điền mô tả gì đó
+                </SheetDescription>
+              </div>
             </SheetHeader>
             <div className="flex flex-col gap-4">
               {NAV_ITEMS.map((item) =>
@@ -159,14 +218,23 @@ export default function Navbar() {
                   </NavLink>
                 ),
               )}
-
-              <div className="mt-6 flex flex-col gap-2">
+              <DropdownMenuSeparator />
+              <div className="flex flex-col gap-2">
                 <Link to="/login">
+                  <Button
+                    onClick={handleLogout}
+                    className="!px-0 text-red-600 focus:text-red-600 bg-inherit"
+                  >
+                    <LogOutIcon />
+                    Đăng xuất
+                  </Button>
+                </Link>
+                {/* <Link to="/login">
                   <Button>Đăng nhập</Button>
                 </Link>
                 <Link to="/register">
                   <Button>Đăng ký</Button>
-                </Link>
+                </Link> */}
               </div>
             </div>
           </SheetContent>

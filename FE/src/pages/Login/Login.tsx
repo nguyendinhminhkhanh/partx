@@ -12,6 +12,8 @@ import {
 import { Input } from "../../components/ui/input";
 import { Label } from "../../components/ui/label";
 import { Link, useNavigate } from "react-router-dom";
+import { useContext } from "react";
+import { AuthContext } from "../../hook/useAuth";
 
 interface Login {
   username: string;
@@ -21,6 +23,14 @@ interface Login {
 export default function Login() {
   const { register, handleSubmit } = useForm<Login>();
   const navigate = useNavigate();
+
+  const user = useContext(AuthContext);
+  if (!user) {
+    throw new Error("AuthContext must be used within AuthProvider");
+  }
+
+  const { setUser } = user;
+
   const onSubmit = async (data: Login) => {
     const { username, password } = data;
     try {
@@ -30,6 +40,12 @@ export default function Login() {
         data: { username, password },
       });
       toast.success("Đăng nhập thành công.");
+      if (res.success) {
+        const { token, fullName, _id } = res.data;
+        console.log("ten: ", fullName);
+        localStorage.setItem("token", token);
+        setUser({ _id, fullName });
+      }
       navigate("/");
       console.log(res);
     } catch (error) {

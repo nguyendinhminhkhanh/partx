@@ -9,6 +9,7 @@ import {
 } from "../../components/ui/table";
 import { Command, CommandItem, CommandList } from "../../components/ui/command";
 import { Button } from "../../components/ui/button";
+import { Spinner } from "../../components/ui/spinner";
 import { useForm } from "react-hook-form";
 import {
   Dialog,
@@ -26,31 +27,11 @@ import { Label } from "../../components/ui/label";
 import { Input } from "../../components/ui/input";
 import { useNavigate } from "react-router";
 import { toast } from "sonner";
-// "_id": "697a2d8662f992fad52b561f",
-// "productCode": "",
-// "productName": "RAM đồng bộ DDR4 4G",
-// "quantity": 9,
-// "price": 280000,
-// "totalAmount": 2520000,
-// "guarantee": 1,
-// "createdBy": {
-//     "_id": "697a26073c7ee231f34c1442",
-//     "companyName": "Công ty TNHH Máy Tính Đỗ Phong",
-//     "address": "Số 60 Ngõ 181 Trường Chinh, Phương Liệt- Hà Nội",
-//     "taxCode": "0109967349",
-//     "email": "",
-//     "website": "dophongpc.com",
-//     "phone": "0965567124",
-//     "createdAt": "2026-01-28T15:06:47.820Z",
-//     "updatedAt": "2026-01-28T15:06:47.820Z",
-//     "__v": 0
-// },
-// "createdAt": "2026-01-28T15:38:46.901Z",
-// "updatedAt": "2026-01-28T15:38:46.901Z",
-// "__v": 0
+
 interface Invoice {
   _id: string;
   productCode: string;
+  imageUrl: string;
   productName: string;
   quantity: string;
   guarantee: number;
@@ -64,7 +45,18 @@ interface Invoice {
   createdAt: string;
 }
 export default function InvoiceList() {
-  const [open, setOpen] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const [preview, setPreview] = useState(null);
+  const [imageFile, setImageFile] = useState<File | null>(null);
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setImageFile(file);
+    setPreview(URL.createObjectURL(file));
+  };
+
+  // const [open, setOpen] = useState(false);
 
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -74,6 +66,13 @@ export default function InvoiceList() {
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const [invoices, setInvoices] = useState<Invoice[]>([]);
+
+  // const imageFile = watch("imageUrl");
+
+  // const previewImage = useMemo(() => {
+  //   if (!imageFile || imageFile.length === 0) return null;
+  //   return URL.createObjectURL(imageFile[0]);
+  // }, [imageFile]);
 
   const quantity = watch("quantity");
   const price = watch("price");
@@ -145,15 +144,70 @@ export default function InvoiceList() {
     fetchInvoice();
   }, []);
 
+  //button clear imagr
+  const handleRemoveImage = () => {
+    setPreview(null);
+    setImageFile(null);
+
+    // reset input file
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
+  };
+
+  // upload image function cloudinary
+  const uploadImage = async () => {
+    const formData = new FormData();
+    if (imageFile) {
+      formData.append("file", imageFile);
+      try {
+        const res = await request({
+          method: "POST",
+          url: "/upload",
+          data: formData,
+        });
+        return res.url;
+      } catch (error) {
+        console.log(error);
+      }
+      // console.log("Image name:", imageFile.name);
+      // console.log("Image size:", imageFile.size);
+      // console.log("Image type:", imageFile.type);
+    }
+  };
+
   const onSubmit = async (data: Invoice) => {
     setIsSubmitting(true);
     const { productName, quantity, price, guarantee, createdBy } = data;
-    console.log(productName, quantity, price, guarantee, createdBy);
+    const imageUrl = await uploadImage();
+
+    console.log(imageUrl, productName, quantity, price, guarantee, createdBy);
+    // upload file image
+    // console.log("Image file:", imageFile);
+    // const formData = new FormData();
+    // if (imageFile) {
+    //   formData.append("file", imageFile);
+    //   try {
+    //     const res = await request({
+    //       method: "POST",
+    //       url: "/upload",
+    //       data: formData,
+    //     });
+    //     console.log("Image Url: ", res);
+
+    //   } catch (error) {
+    //     console.log(error);
+    //   }
+    //   // console.log("Image name:", imageFile.name);
+    //   // console.log("Image size:", imageFile.size);
+    //   // console.log("Image type:", imageFile.type);
+    // }
+
     try {
       const res = await request({
         method: "POST",
         url: "/invoice/create",
-        data: { productName, quantity, price, guarantee, createdBy },
+        data: { imageUrl, productName, quantity, price, guarantee, createdBy },
       });
       if (res.success) {
         // 1. reset form
@@ -164,24 +218,24 @@ export default function InvoiceList() {
         setResultFindCom([]);
 
         // 3. đóng form
-        setOpen(false);
+        // setOpen(false);
 
         // 4. chuyển trang
-        navigate("/invoicelist");
-        setIsSubmitting(false);
         toast.success("Tạo hóa đơn thành công");
+        setIsSubmitting(false);
+        setTimeout(() => {
+          navigate(0);
+        }, 500);
       }
     } catch (error) {
       console.log(error);
     }
   };
 
-  // chưa thấy đóng khi submit forem
-
   return (
     <MainLayout>
       <div className="hidden md:block">
-        <Dialog open={open} onOpenChange={setOpen}>
+        <Dialog>
           <div className="flex justify-end m-4 text-sm">
             <DialogTrigger asChild>
               <Button className="bg-green-600 hover:bg-green-800">
@@ -231,14 +285,51 @@ export default function InvoiceList() {
                 </Command>
                 <Field>
                   <Label htmlFor="image">Hình ảnh</Label>
-                  <label
-                    htmlFor="image"
-                    className="flex flex-col items-center justify-center border-2 border-dashed rounded-lg p-6 cursor-pointer hover:bg-muted transition"
-                  >
-                    <span className="text-sm text-muted-foreground">
-                      Click to upload image
-                    </span>
-                  </label>
+
+                  <input
+                    type="file"
+                    accept="image/*"
+                    ref={fileInputRef}
+                    onChange={handleFileChange}
+                    style={{ display: "none" }}
+                  />
+                  {preview ? (
+                    <div style={{ marginTop: 20 }}>
+                      <img src={preview} alt="preview" width="200" />
+
+                      <div style={{ marginTop: 10 }}>
+                        <button
+                          type="button"
+                          onClick={handleRemoveImage}
+                          className=" bg-black bg-opacity-60 text-white rounded-full px-2"
+                        >
+                          X
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => fileInputRef.current.click()}
+                    >
+                      <label
+                        htmlFor="image"
+                        className="flex flex-col items-center justify-center border-2 border-dashed rounded-lg p-6 cursor-pointer hover:bg-muted transition"
+                      >
+                        {/* {previewImage ? (
+                      <img
+                        src={previewImage}
+                        alt="preview"
+                        className="h-32 w-32 object-cover rounded-md"
+                      />
+                    ) : ( */}
+                        <span className="text-sm text-muted-foreground">
+                          Click to upload image
+                        </span>
+                        {/* )} */}
+                      </label>
+                    </button>
+                  )}
                 </Field>
                 <Field>
                   <Label htmlFor="productName">Sản phẩm:</Label>
@@ -252,6 +343,7 @@ export default function InvoiceList() {
                   <Label htmlFor="guarantee">Bảo hành:</Label>
                   <Input
                     id="guarantee"
+                    type="number"
                     {...register("guarantee", { required: true })}
                     placeholder="Tháng"
                   />
@@ -283,13 +375,20 @@ export default function InvoiceList() {
                     </Label>
                   </div>
                 </Field>
-                <Button
-                  type="submit"
-                  className="bg-green-600 hover:bg-green-800"
-                  disabled={isSubmitting}
-                >
-                  {isSubmitting ? "Đang tạo..." : "Tạo hóa đơn"}
-                </Button>
+
+                {isSubmitting ? (
+                  <Button variant="secondary" disabled>
+                    Đang tạo...
+                    <Spinner data-icon="inline-start" />
+                  </Button>
+                ) : (
+                  <Button
+                    type="submit"
+                    className="bg-green-600 hover:bg-green-800"
+                  >
+                    Tạo hóa đơn
+                  </Button>
+                )}
               </FieldGroup>
             </form>
           </DialogContent>
@@ -331,7 +430,9 @@ export default function InvoiceList() {
 
       {/* //mobile */}
       <div className="md:hidden space-y-3 m-3">
-        <Dialog open={open} onOpenChange={setOpen}>
+        <Dialog
+        //  open={open} onOpenChange={setOpen}
+        >
           <div className="">
             <DialogTrigger asChild>
               <Button className="bg-green-600 ">Tạo Hóa Đơn</Button>
@@ -379,14 +480,43 @@ export default function InvoiceList() {
                 </Command>
                 <Field>
                   <Label htmlFor="image">Hình ảnh</Label>
-                  <label
-                    htmlFor="image"
-                    className="flex flex-col items-center justify-center border-2 border-dashed rounded-lg p-6 cursor-pointer hover:bg-muted transition"
-                  >
-                    <span className="text-sm text-muted-foreground">
-                      Click to upload image
-                    </span>
-                  </label>
+
+                  <input
+                    type="file"
+                    accept="image/*"
+                    ref={fileInputRef}
+                    onChange={handleFileChange}
+                    style={{ display: "none" }}
+                  />
+                  {preview ? (
+                    <div style={{ marginTop: 20 }}>
+                      <img src={preview} alt="preview" width="200" />
+
+                      <div style={{ marginTop: 10 }}>
+                        <Button
+                          type="button"
+                          onClick={handleRemoveImage}
+                          className="px-3 py-1 text-white rounded"
+                        >
+                          Hủy ảnh
+                        </Button>
+                      </div>
+                    </div>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => fileInputRef.current.click()}
+                    >
+                      <label
+                        htmlFor="image"
+                        className="flex flex-col items-center justify-center border-2 border-dashed rounded-lg p-6 cursor-pointer hover:bg-muted transition"
+                      >
+                        <span className="text-sm text-muted-foreground">
+                          Click to upload image
+                        </span>
+                      </label>
+                    </button>
+                  )}
                 </Field>
                 <Field>
                   <Label htmlFor="productName">Sản phẩm:</Label>
@@ -400,6 +530,7 @@ export default function InvoiceList() {
                   <Label htmlFor="guarantee">Bảo hành:</Label>
                   <Input
                     id="guarantee"
+                    type="number"
                     {...register("guarantee", { required: true })}
                     placeholder="Tháng"
                   />
@@ -434,8 +565,9 @@ export default function InvoiceList() {
                 <Button
                   type="submit"
                   className="bg-green-600 hover:bg-green-800"
+                  disabled={isSubmitting}
                 >
-                  Tạo hóa đơn
+                  {isSubmitting ? "Đang tạo..." : "Tạo hóa đơn"}
                 </Button>
               </FieldGroup>
             </form>
