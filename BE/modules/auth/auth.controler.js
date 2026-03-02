@@ -82,4 +82,21 @@ const register = async (req, res) => {
   });
 };
 
-module.exports = { login, register };
+// [GET] /api/auth/me
+const getUserInfor = async (req, res) => {
+  const { user } = req;
+  const userInfor = user
+    ? {
+        _id: user._id,
+        fullName: user.fullName,
+        username: user.username,
+        createdAt: user.createdAt,
+        email: user.email,
+        phone: user.phone,
+        role: user.role,
+      }
+    : null;
+  res.send({ success: 1, data: userInfor });
+};
+
+module.exports = { login, register, getUserInfor };

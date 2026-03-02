@@ -1,222 +1,75 @@
-import { useMemo, useRef, useState } from "react";
-import { MainLayout } from "../components/Layout";
+import { useContext } from "react";
+import { AuthContext } from "../hook/useAuth";
+import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
+import { Avatar, AvatarFallback, AvatarImage } from "../components/ui/avatar";
+import { Separator } from "../components/ui/separator";
+// import { Badge } from "../components/ui/badge";
 import { Button } from "../components/ui/button";
-import {
-  Command,
-  CommandDialog,
-  CommandEmpty,
-  CommandGroup,
-  CommandInput,
-  CommandItem,
-  CommandList,
-  CommandSeparator,
-  CommandShortcut,
-} from "../components/ui/command";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "../components/ui/dialog";
-import { Field, FieldGroup } from "../components/ui/field";
-import { Input } from "../components/ui/input";
-import { Label } from "../components/ui/label";
-// mock/companies.ts
-export const MOCK_COMPANIES = [
-  {
-    _id: "c1",
-    name: "Công ty TNHH Thành Đạt",
-    address: "Quận 1, TP.HCM",
-  },
-  {
-    _id: "c2",
-    name: "Công ty CP Công Nghệ Sao Việt",
-    address: "Quận Cầu Giấy, Hà Nội",
-  },
-  {
-    _id: "c3",
-    name: "Cửa hàng máy tính Minh Phát",
-    address: "Thủ Đức, TP.HCM",
-  },
-  {
-    _id: "c4",
-    name: "Công ty Phần Mềm Ánh Dương",
-    address: "Đà Nẵng",
-  },
-  {
-    _id: "c5",
-    name: "Công ty Thương Mại Hoàng Long",
-    address: "Bình Dương",
-  },
-];
+import { UserIcon, MailIcon, IdCardIcon } from "lucide-react";
 
-export default function PageTest() {
-  const fileInputRef = useRef(null);
-  const [preview, setPreview] = useState(null);
+export default function Profile() {
+  const auth = useContext(AuthContext);
 
-  const handleFileChange = (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
+  if (!auth) {
+    throw new Error("AuthContext must be used within AuthProvider");
+  }
 
-    setPreview(URL.createObjectURL(file));
-  };
+  const { user } = auth;
 
-  const [companyName, setCompanyName] = useState("");
-  const results = useMemo(() => {
-    if (!companyName.trim()) return [];
+  if (!user) {
+    return <div className="p-6">Không có thông tin người dùng</div>;
+  }
 
-    return MOCK_COMPANIES.filter((c) =>
-      c.name.toLowerCase().includes(companyName.toLowerCase()),
-    );
-  }, [companyName]);
   return (
-    <MainLayout>
-      <div>
-        <input
-          type="file"
-          accept="image/*"
-          ref={fileInputRef}
-          onChange={handleFileChange}
-          style={{ display: "none" }}
-        />
-        <button type="button" onClick={() => fileInputRef.current.click()}>
-          <label
-            htmlFor="image"
-            className="flex flex-col items-center justify-center border-2 border-dashed rounded-lg p-6 cursor-pointer hover:bg-muted transition"
-          >
-            {/* {previewImage ? (
-                      <img
-                        src={previewImage}
-                        alt="preview"
-                        className="h-32 w-32 object-cover rounded-md"
-                      />
-                    ) : ( */}
-            <span className="text-sm text-muted-foreground">
-              Click to upload image
-            </span>
-            {/* )} */}
-          </label>
-        </button>
+    <div className="flex justify-center items-center min-h-[80vh] p-6">
+      <Card className="w-full max-w-2xl shadow-xl rounded-2xl">
+        <CardHeader className="flex flex-col items-center gap-4">
+          <Avatar className="w-24 h-24 ring-2 ring-primary ring-offset-2">
+            <AvatarImage src="https://i.pravatar.cc/150?img=12" />
+            <AvatarFallback className="text-2xl">
+              {user.fullName?.charAt(0)}
+            </AvatarFallback>
+          </Avatar>
 
-        {preview && (
-          <div style={{ marginTop: 20 }}>
-            <img src={preview} alt="preview" width="200" />
+          <CardTitle className="text-2xl">{user.fullName}</CardTitle>
+
+          {/* <Badge variant="secondary">Quản trị viên</Badge> */}
+        </CardHeader>
+
+        <Separator />
+
+        <CardContent className="space-y-4 pt-6">
+          <div className="flex items-center gap-3">
+            <UserIcon className="w-5 h-5 text-muted-foreground" />
+            <div>
+              <p className="text-sm text-muted-foreground">Username</p>
+              <p className="font-medium">{user.username}</p>
+            </div>
           </div>
-        )}
-      </div>
 
-      <Dialog>
-        <form>
-          <div className="flex justify-end m-4 text-sm">
-            <DialogTrigger asChild>
-              <Button className="bg-green-600 hover:bg-green-800">
-                Tạo Hóa Đơn
-              </Button>
-            </DialogTrigger>
+          <div className="flex items-center gap-3">
+            <MailIcon className="w-5 h-5 text-muted-foreground" />
+            <div>
+              <p className="text-sm text-muted-foreground">Email</p>
+              <p className="font-medium">{user.email || "Chưa cập nhật"}</p>
+            </div>
           </div>
-          <DialogContent className=" w-[95vw] max-w-5xl max-h-[90vh] overflow-y-auto rounded-lg">
-            <DialogHeader>
-              <DialogTitle>Tạo hóa đơn</DialogTitle>
-              <DialogDescription>Hóa đơn nhập hàng</DialogDescription>
-            </DialogHeader>
-            <FieldGroup>
-              <Field>
-                <Label htmlFor="companyName">Đơn vị bán hàng:</Label>
-                <Input
-                  id="companyName"
-                  name="companyName"
-                  placeholder="Tên công ty"
-                />
-              </Field>
 
-              <Command className="border rounded-md">
-                <CommandInput
-                  placeholder="Tìm công ty..."
-                  value={companyName}
-                  onValueChange={setCompanyName}
-                />
+          <div className="flex items-center gap-3">
+            <IdCardIcon className="w-5 h-5 text-muted-foreground" />
+            <div>
+              <p className="text-sm text-muted-foreground">User ID</p>
+              <p className="font-medium">{user._id}</p>
+            </div>
+          </div>
 
-                <CommandList>
-                  {results.length === 0 && (
-                    <p className="px-3 py-2 text-sm text-muted-foreground">
-                      Không tìm thấy công ty
-                    </p>
-                  )}
+          <Separator />
 
-                  {results.map((c) => (
-                    <CommandItem
-                      key={c._id}
-                      onSelect={() => {
-                        setCompanyName(c.name);
-                      }}
-                    >
-                      <div className="flex flex-col">
-                        <span className="font-medium">{c.name}</span>
-                        <span className="text-xs text-muted-foreground">
-                          {c.address}
-                        </span>
-                      </div>
-                    </CommandItem>
-                  ))}
-                </CommandList>
-              </Command>
-
-              <Field>
-                <Label htmlFor="productName">Sản phẩm:</Label>
-                <Input
-                  id="productName"
-                  name="productName"
-                  placeholder="Tên sản phẩm"
-                />
-              </Field>
-              <Field>
-                <Label htmlFor="guarantee">Bảo hành:</Label>
-                <Input id="guarantee" name="guarantee" placeholder="Tháng" />
-              </Field>
-              <Field className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                <div className="space-y-2">
-                  <Label htmlFor="quantity">Số lượng:</Label>
-                  <Input id="quantity" name="quantity" placeholder="Số lượng" />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="price">Giá:</Label>
-                  <Input id="price" name="price" placeholder="VND" />
-                </div>
-              </Field>
-              <Field>
-                <div className="space-y-2">
-                  <Label htmlFor="totalAmount">Tổng tiền: </Label>
-                  {/* <Input
-                    id="totalAmount"
-                    name="totalAmount"
-                    placeholder="VND"
-                  /> */}
-                </div>
-              </Field>
-
-              <Field>
-                <Label htmlFor="image">Hình ảnh</Label>
-                <label
-                  htmlFor="image"
-                  className="flex flex-col items-center justify-center border-2 border-dashed rounded-lg p-6 cursor-pointer hover:bg-muted transition"
-                >
-                  <span className="text-sm text-muted-foreground">
-                    Click to upload image
-                  </span>
-                </label>
-              </Field>
-            </FieldGroup>
-            <DialogFooter>
-              <Button type="submit" className="bg-green-600 hover:bg-green-800">
-                Tạo hóa đơn
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </form>
-      </Dialog>
-    </MainLayout>
+          <div className="flex justify-end">
+            <Button variant="outline">Chỉnh sửa hồ sơ</Button>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
   );
 }

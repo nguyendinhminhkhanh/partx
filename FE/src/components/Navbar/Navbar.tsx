@@ -59,6 +59,7 @@ export default function Navbar() {
     throw new Error("AuthContext must be used within AuthProvider");
   }
   const { user, setUser } = auth;
+  console.log("User in Navbar:", user);
 
   const isParentActive = (children?: { to: string }[]) => {
     if (!children) return false;
@@ -122,12 +123,35 @@ export default function Navbar() {
         <div className="hidden md:flex gap-2">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="outline">{user?.fullName}</Button>
+              {user ? (
+                <Button
+                  variant="ghost"
+                  className="flex items-center gap-3 px-3 py-2 rounded-xl hover:bg-muted transition"
+                >
+                  <Avatar className="w-9 h-9 ring-2 ring-border">
+                    <AvatarImage src="https://i.pravatar.cc/150?img=12" />
+                    <AvatarFallback className="bg-primary text-white text-sm">
+                      {user?.fullName?.charAt(0)}
+                    </AvatarFallback>
+                  </Avatar>
+
+                  <div className="hidden md:flex flex-col items-start leading-tight">
+                    <span className="text-sm font-medium">
+                      {user?.fullName}
+                    </span>
+                    <span className="text-xs text-muted-foreground">
+                      {user?.username}
+                    </span>
+                  </div>
+                </Button>
+              ) : (
+                <Button variant="outline">Đăng nhập</Button>
+              )}
             </DropdownMenuTrigger>
             <DropdownMenuContent>
               <DropdownMenuItem>
                 <UserIcon />
-                Profile
+                <Link to="/profile">Profile</Link>
               </DropdownMenuItem>
               <DropdownMenuItem>
                 <CreditCardIcon />
@@ -155,23 +179,27 @@ export default function Navbar() {
           </SheetTrigger>
 
           <SheetContent side="right" className="w-72 p-6">
-            <SheetHeader className="flex flex-row items-center gap-4">
-              <Avatar className="w-20 h-20 ring-2 ring-primary ring-offset-2">
-                <AvatarImage
-                  src="https://i.pravatar.cc/150?img=12"
-                  alt="Demo User"
-                />
-                <AvatarFallback>U</AvatarFallback>
-              </Avatar>
+            <SheetHeader className="flex flex-col items-center text-center gap-3 pb-4">
+              <Link to="/profile">
+                <Avatar className="w-16 h-16 ring-2 ring-primary ring-offset-2">
+                  <AvatarImage
+                    src="https://i.pravatar.cc/150?img=12"
+                    alt="Demo User"
+                  />
+                  <AvatarFallback>{user?.fullName?.charAt(0)}</AvatarFallback>
+                </Avatar>
+              </Link>
+              <Link to="/profile">
+                <div className="flex flex-col items-center">
+                  <SheetTitle className="text-base font-semibold">
+                    {user?.fullName}
+                  </SheetTitle>
 
-              <div className="flex flex-col">
-                <SheetTitle className="text-lg font-semibold">
-                  {user?.fullName}
-                </SheetTitle>
-                <SheetDescription className="text-sm hidden text-muted-foreground">
-                  Chỗ này cần điền mô tả gì đó
-                </SheetDescription>
-              </div>
+                  <SheetDescription className="text-xs text-muted-foreground">
+                    Quản trị viên
+                  </SheetDescription>
+                </div>
+              </Link>
             </SheetHeader>
             <div className="flex flex-col gap-4">
               {NAV_ITEMS.map((item) =>

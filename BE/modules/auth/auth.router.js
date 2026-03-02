@@ -1,6 +1,7 @@
 const express = require("express");
 const Auth = require("./auth.controler");
 const validateInput = require("../../common/middlewares/validateInput");
+const getUser = require("../../common/middlewares/getUser");
 const authValid = require("./auth.validation");
 const router = express.Router();
 
@@ -10,5 +11,6 @@ router.post(
   validateInput(authValid.registerSchema, "body"),
   Auth.register,
 );
+router.get("/me", getUser, Auth.getUserInfor);
 
 module.exports = router;

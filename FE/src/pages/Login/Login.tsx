@@ -40,6 +40,7 @@ export default function Login() {
         data: { username, password },
       });
       toast.success("Đăng nhập thành công.");
+      console.log("res: ", res);  
       if (res.success) {
         const { token, fullName, _id } = res.data;
         console.log("ten: ", fullName);
@@ -65,12 +66,13 @@ export default function Login() {
         </CardHeader>
         <form onSubmit={handleSubmit(onSubmit)}>
           <CardContent className="space-y-4">
-            {/* Email */}
+            {/* UserName */}
             <div className="space-y-2">
               <Label htmlFor="username">Tên đăng nhập</Label>
               <Input
                 id="username"
                 type="text"
+                autoComplete="username"
                 {...register("username", { required: true })}
                 placeholder="example"
               />
@@ -84,6 +86,7 @@ export default function Login() {
                 type="password"
                 {...register("password", { required: true })}
                 placeholder="••••••••"
+                autoComplete="current-password"
               />
             </div>
 
