@@ -28,7 +28,7 @@ const createSalesUnit = async (req, res) => {
 //[GET] /api/salesUnit/:id
 const getSalesUnitById = async (req, res) => {
   const { id } = req.params;
-
+  console.log(id);
   const salesUnit = await SalesUnitModel.findById(id);
   if (!salesUnit) {
     return res

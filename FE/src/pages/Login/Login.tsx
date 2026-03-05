@@ -40,15 +40,15 @@ export default function Login() {
         data: { username, password },
       });
       toast.success("Đăng nhập thành công.");
-      console.log("res: ", res);  
+      // console.log("res: ", res);
       if (res.success) {
-        const { token, fullName, _id } = res.data;
-        console.log("ten: ", fullName);
+        const { token, fullName, _id, username, email, phone, createdAt } =
+          res.data;
+        // console.log("ten: ", fullName,username ,email,phone,createdAt);
         localStorage.setItem("token", token);
-        setUser({ _id, fullName });
+        setUser({ _id, fullName, username, email, phone, createdAt });
       }
       navigate("/");
-      console.log(res);
     } catch (error) {
       toast.error("Thông tin đăng nhập không chính xác.");
       console.log(error);

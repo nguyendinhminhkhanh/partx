@@ -27,6 +27,7 @@ import { Label } from "../../components/ui/label";
 import { Input } from "../../components/ui/input";
 import { useNavigate } from "react-router";
 import { toast } from "sonner";
+import { Separator } from "../../components/ui/separator";
 
 interface Invoice {
   _id: string;
@@ -49,6 +50,8 @@ export default function InvoiceList() {
   const [preview, setPreview] = useState(null);
   const [imageFile, setImageFile] = useState<File | null>(null);
 
+  const [selectedInvoice, setSelectedInvoice] = useState<any>(null);
+
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -56,7 +59,7 @@ export default function InvoiceList() {
     setPreview(URL.createObjectURL(file));
   };
 
-  // const [open, setOpen] = useState(false);
+  const [openDetail, setOpenDetail] = useState(false);
 
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -136,7 +139,7 @@ export default function InvoiceList() {
           url: "/invoice",
         });
         setInvoices(res.data);
-        console.log("danh sach hao donw ", res.data);
+        // console.log("danh sach hao donw ", res.data);
       } catch (error) {
         console.log("Lỗi lấy hóa đơn!!!", error);
       }
@@ -408,7 +411,14 @@ export default function InvoiceList() {
 
           <TableBody>
             {invoices.map((item) => (
-              <TableRow key={item._id}>
+              <TableRow
+                key={item._id}
+                className="cursor-pointer"
+                onClick={() => {
+                  setSelectedInvoice(item);
+                  setOpenDetail(true);
+                }}
+              >
                 <TableCell className="font-medium">{item._id}</TableCell>
                 <TableCell>
                   {new Date(item.createdAt).toLocaleString("vi-VN")}
@@ -427,7 +437,6 @@ export default function InvoiceList() {
           </TableBody>
         </Table>
       </div>
-
       {/* //mobile */}
       <div className="md:hidden space-y-3 m-3">
         <Dialog
@@ -573,9 +582,14 @@ export default function InvoiceList() {
             </form>
           </DialogContent>
         </Dialog>
+
         {invoices.map((item) => (
           <div
             key={item._id}
+            onClick={() => {
+              setSelectedInvoice(item);
+              setOpenDetail(true);
+            }}
             className="rounded-xl border border-border bg-background p-4 shadow-sm"
           >
             {/* ID + Date */}
@@ -619,6 +633,77 @@ export default function InvoiceList() {
           </div>
         ))}
       </div>
+
+      {/* //chi tiết sản phẩm */}
+      <Dialog open={openDetail} onOpenChange={setOpenDetail}>
+        <DialogContent className="w-[95vw] max-w-xl max-h-[85vh] overflow-y-auto">
+          {selectedInvoice && (
+            <>
+              <DialogHeader>
+                <DialogTitle className="text-lg md:text-xl font-semibold">
+                  Chi tiết hóa đơn
+                </DialogTitle>
+
+                <DialogDescription className="text-sm text-center md:text-left w-full">
+                  <span className="font-medium text-primary break-all">
+                    {new Date(selectedInvoice.createdAt).toLocaleString(
+                      "vi-VN",
+                    )}
+                  </span>
+                </DialogDescription>
+              </DialogHeader>
+
+              <div className="mt-4">
+                <img
+                  src={selectedInvoice.imageUrl}
+                  alt={selectedInvoice.productName}
+                  className="w-full h-52 md:h-64 object-cover rounded-lg border"
+                />
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
+                <div className="space-y-1">
+                  <p className="text-muted-foreground">Mã hóa đơn</p>
+                  <p className="font-medium">{selectedInvoice._id}</p>
+                </div>
+
+                <div className="space-y-1">
+                  <p className="text-muted-foreground">Đơn vị bán</p>
+                  <p className="font-medium break-words">
+                    {selectedInvoice.createdBy?.companyName}
+                  </p>
+                </div>
+
+                <div className="space-y-1">
+                  <p className="text-muted-foreground">Sản phẩm</p>
+                  <p className="font-medium break-words">
+                    {selectedInvoice.productName}
+                  </p>
+                </div>
+
+                <div className="space-y-1">
+                  <p className="text-muted-foreground">Số lượng</p>
+                  <p className="font-medium">{selectedInvoice.quantity}</p>
+                </div>
+
+                <div className="space-y-1">
+                  <p className="text-muted-foreground">Đơn giá</p>
+                  <p className="font-medium">
+                    {formatVND(selectedInvoice.price)}
+                  </p>
+                </div>
+
+                <div className="space-y-1">
+                  <p className="text-muted-foreground">Tổng tiền</p>
+                  <p className="font-semibold text-green-600">
+                    {formatVND(selectedInvoice.totalAmount)}
+                  </p>
+                </div>
+              </div>
+            </>
+          )}
+        </DialogContent>
+      </Dialog>
     </MainLayout>
   );
 }

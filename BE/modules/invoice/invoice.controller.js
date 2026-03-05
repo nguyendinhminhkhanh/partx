@@ -4,7 +4,15 @@ const InvoiceModel = require("./invoice");
 //[POST] /api/invoice/create
 // Logic to create an invoice
 const createInvoice = async (req, res) => {
-  const { imageUrl, productCode, productName, quantity, price, guarantee, createdBy } = req.body;
+  const {
+    imageUrl,
+    productCode,
+    productName,
+    quantity,
+    price,
+    guarantee,
+    createdBy,
+  } = req.body;
   const q = Number(quantity);
   const p = Number(price);
   if (!Number.isFinite(q) || !Number.isFinite(p)) {
@@ -78,6 +86,11 @@ const getInvoiceById = async (req, res) => {
       .send({ success: 0, message: "Không tìm thấy hóa đơn" });
   }
   res.send({ success: 1, data: invoice });
+};
+
+//[DELETE] /api/invoice/:id
+const deleteInvoice = () => {
+  console.log("del");
 };
 
 module.exports = {

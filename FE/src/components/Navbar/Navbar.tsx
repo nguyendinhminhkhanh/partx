@@ -59,7 +59,7 @@ export default function Navbar() {
     throw new Error("AuthContext must be used within AuthProvider");
   }
   const { user, setUser } = auth;
-  console.log("User in Navbar:", user);
+  // console.log("User in Navbar:", user);
 
   const isParentActive = (children?: { to: string }[]) => {
     if (!children) return false;
@@ -69,7 +69,7 @@ export default function Navbar() {
   const handleLogout = () => {
     localStorage.removeItem("token");
     setUser(null);
-    console.log("Logout");
+    // console.log("Logout");
   };
 
   return (

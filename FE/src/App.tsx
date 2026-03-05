@@ -29,7 +29,7 @@ function App() {
           url: "/auth/me",
           method: "GET",
         });
-        console.log("Fetch user info response:", res);
+        // console.log("Fetch user info response:", res);
         if (res.success) {
           setUser(res.data);
           setStatus("done");
