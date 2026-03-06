@@ -27,7 +27,8 @@ import { Label } from "../../components/ui/label";
 import { Input } from "../../components/ui/input";
 import { useNavigate } from "react-router";
 import { toast } from "sonner";
-import { Separator } from "../../components/ui/separator";
+// import { Separator } from "../../components/ui/separator";
+import { ScrollArea } from "../../components/ui/scroll-area";
 
 interface Invoice {
   _id: string;
@@ -636,72 +637,78 @@ export default function InvoiceList() {
 
       {/* //chi tiết sản phẩm */}
       <Dialog open={openDetail} onOpenChange={setOpenDetail}>
-        <DialogContent className="w-[95vw] max-w-xl max-h-[85vh] overflow-y-auto">
-          {selectedInvoice && (
-            <>
-              <DialogHeader>
-                <DialogTitle className="text-lg md:text-xl font-semibold">
-                  Chi tiết hóa đơn
-                </DialogTitle>
+        <DialogContent className="w-[95vw] max-w-xl max-h-[90vh] p-0">
+          <ScrollArea className="max-h-[90vh] p-6 md:pr-4">
+            {selectedInvoice && (
+              <>
+                <DialogHeader>
+                  <DialogTitle className="text-lg md:text-xl font-semibold text-center md:text-left">
+                    Chi tiết hóa đơn
+                  </DialogTitle>
 
-                <DialogDescription className="text-sm text-center md:text-left w-full">
-                  <span className="font-medium text-primary break-all">
-                    {new Date(selectedInvoice.createdAt).toLocaleString(
-                      "vi-VN",
-                    )}
-                  </span>
-                </DialogDescription>
-              </DialogHeader>
+                  <DialogDescription className="text-sm text-center md:text-left w-full">
+                    <span className="font-medium text-primary break-all">
+                      {new Date(selectedInvoice.createdAt).toLocaleString(
+                        "vi-VN",
+                      )}
+                    </span>
+                  </DialogDescription>
+                </DialogHeader>
 
-              <div className="mt-4">
-                <img
-                  src={selectedInvoice.imageUrl}
-                  alt={selectedInvoice.productName}
-                  className="w-full h-52 md:h-64 object-cover rounded-lg border"
-                />
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
-                <div className="space-y-1">
-                  <p className="text-muted-foreground">Mã hóa đơn</p>
-                  <p className="font-medium">{selectedInvoice._id}</p>
+                {/* IMAGE */}
+                <div className="mt-4 flex justify-center">
+                  <img
+                    src={selectedInvoice.imageUrl}
+                    alt={selectedInvoice.productName}
+                    className="max-h-[60vh] w-auto object-contain rounded-lg border shadow-sm"
+                  />
                 </div>
 
-                <div className="space-y-1">
-                  <p className="text-muted-foreground">Đơn vị bán</p>
-                  <p className="font-medium break-words">
-                    {selectedInvoice.createdBy?.companyName}
-                  </p>
-                </div>
+                {/* INFO */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm mt-4">
+                  <div className="space-y-1">
+                    <p className="text-muted-foreground">Mã hóa đơn</p>
+                    <p className="font-medium break-all">
+                      {selectedInvoice._id}
+                    </p>
+                  </div>
 
-                <div className="space-y-1">
-                  <p className="text-muted-foreground">Sản phẩm</p>
-                  <p className="font-medium break-words">
-                    {selectedInvoice.productName}
-                  </p>
-                </div>
+                  <div className="space-y-1">
+                    <p className="text-muted-foreground">Đơn vị bán</p>
+                    <p className="font-medium break-words">
+                      {selectedInvoice.createdBy?.companyName}
+                    </p>
+                  </div>
 
-                <div className="space-y-1">
-                  <p className="text-muted-foreground">Số lượng</p>
-                  <p className="font-medium">{selectedInvoice.quantity}</p>
-                </div>
+                  <div className="space-y-1">
+                    <p className="text-muted-foreground">Sản phẩm</p>
+                    <p className="font-medium break-words">
+                      {selectedInvoice.productName}
+                    </p>
+                  </div>
 
-                <div className="space-y-1">
-                  <p className="text-muted-foreground">Đơn giá</p>
-                  <p className="font-medium">
-                    {formatVND(selectedInvoice.price)}
-                  </p>
-                </div>
+                  <div className="space-y-1">
+                    <p className="text-muted-foreground">Số lượng</p>
+                    <p className="font-medium">{selectedInvoice.quantity}</p>
+                  </div>
 
-                <div className="space-y-1">
-                  <p className="text-muted-foreground">Tổng tiền</p>
-                  <p className="font-semibold text-green-600">
-                    {formatVND(selectedInvoice.totalAmount)}
-                  </p>
+                  <div className="space-y-1">
+                    <p className="text-muted-foreground">Đơn giá</p>
+                    <p className="font-medium">
+                      {formatVND(selectedInvoice.price)}
+                    </p>
+                  </div>
+
+                  <div className="space-y-1">
+                    <p className="text-muted-foreground">Tổng tiền</p>
+                    <p className="font-semibold text-green-600">
+                      {formatVND(selectedInvoice.totalAmount)}
+                    </p>
+                  </div>
                 </div>
-              </div>
-            </>
-          )}
+              </>
+            )}
+          </ScrollArea>
         </DialogContent>
       </Dialog>
     </MainLayout>
