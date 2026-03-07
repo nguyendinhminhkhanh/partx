@@ -13,6 +13,7 @@ import { useEffect, useState } from "react";
 import type { User } from "./hook/useAuth";
 import { PrivatePage } from "./pages/RulePage";
 import request from "./api/request";
+import SaleUnitList from "./pages/SaleUnitList";
 function App() {
   const [status, setStatus] = useState("idle");
   const [user, setUser] = useState<User | null>(null);
@@ -71,6 +72,11 @@ function App() {
           <Route
             path="/createinvoice"
             element={<CreateInvoice></CreateInvoice>}
+          ></Route>
+
+          <Route
+            path="/saleunitlist"
+            element={<SaleUnitList></SaleUnitList>}
           ></Route>
 
           <Route path="/pagetest" element={<PageTest></PageTest>}></Route>

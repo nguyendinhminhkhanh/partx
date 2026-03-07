@@ -43,7 +43,7 @@ const NAV_ITEMS = [
     label: "Hóa đơn",
     children: [
       { label: "Hóa đơn nhập", to: "/invoicelist" },
-      { label: "Đơn vị bán hàng", to: "/createsaleunit" },
+      { label: "Đơn vị bán hàng", to: "/saleunitlist" },
     ],
   },
   { label: "PageTEst", to: "/pagetest" },
