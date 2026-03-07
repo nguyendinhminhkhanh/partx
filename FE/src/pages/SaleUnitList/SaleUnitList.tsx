@@ -30,7 +30,7 @@ import { toast } from "sonner";
 // import { Separator } from "../../components/ui/separator";
 import { ScrollArea } from "../../components/ui/scroll-area";
 
-interface SaleUnitList {
+interface SaleUnit {
   _id: string;
   companyName: string;
   address: string;
@@ -41,7 +41,13 @@ interface SaleUnitList {
   createdAt: string;
 }
 export default function SaleUnitList() {
-  const [saleUnits, setSaleUnits] = useState<SaleUnitList[]>([]);
+  const [saleUnits, setSaleUnits] = useState<SaleUnit[]>([]);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const { register, handleSubmit, reset, setValue, watch } =
+    useForm<SaleUnit>();
+  const onSubmit = async (data: SaleUnit) => {
+    console.log(data);
+  };
 
   useEffect(() => {
     const fetchInvoice = async () => {
@@ -61,6 +67,75 @@ export default function SaleUnitList() {
   return (
     <MainLayout>
       <div className="hidden md:block">
+        <Dialog>
+          <div className="flex justify-end m-4 text-sm">
+            <DialogTrigger asChild>
+              <Button className="bg-green-600 hover:bg-green-800">
+                Thêm đơn vị bán hàng
+              </Button>
+            </DialogTrigger>
+          </div>
+          <DialogContent className=" w-[95vw] max-w-5xl max-h-[90vh] overflow-y-auto rounded-lg">
+            <DialogHeader>
+              <DialogTitle className="text-green-600">
+                Thêm đơn vị bán hàng
+              </DialogTitle>
+              <DialogDescription>Đơn vị</DialogDescription>
+            </DialogHeader>
+            <form onSubmit={handleSubmit(onSubmit)}>
+              <FieldGroup>
+                <Field>
+                  <Label htmlFor="companyName">Tên công ty:</Label>
+                  <Input
+                    id="companyName"
+                    {...register("companyName", { required: true })}
+                    placeholder="Tên công ty"
+                  />
+                </Field>
+                <Field>
+                  <Label htmlFor="address">Địa chỉ:</Label>
+                  <Input
+                    id="address"
+                    {...register("address", { required: true })}
+                    placeholder="Địa chỉ"
+                  />
+                </Field>
+                <Field className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                  <div className="space-y-2">
+                    <Label htmlFor="email">Email:</Label>
+                    <Input
+                      id="quantity"
+                      {...register("email", { required: true })}
+                      placeholder="example@gmail.com"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="phone">Phone:</Label>
+                    <Input
+                      id="phone"
+                      type="number"
+                      {...register("phone", { required: true })}
+                      placeholder="+84"
+                    />
+                  </div>
+                </Field>
+                {isSubmitting ? (
+                  <Button variant="secondary" disabled>
+                    Đang tạo...
+                    <Spinner data-icon="inline-start" />
+                  </Button>
+                ) : (
+                  <Button
+                    type="submit"
+                    className="bg-green-600 hover:bg-green-800"
+                  >
+                    Tạo hóa đơn
+                  </Button>
+                )}
+              </FieldGroup>
+            </form>
+          </DialogContent>
+        </Dialog>
         <Table>
           <TableHeader>
             <TableRow>
@@ -106,126 +181,55 @@ export default function SaleUnitList() {
           </div>
           <DialogContent className=" w-[95vw] max-w-5xl max-h-[90vh] overflow-y-auto rounded-lg">
             <DialogHeader>
-              <DialogTitle className="text-green-600">Thêm đơn vị bán hàng</DialogTitle>
-              <DialogDescription>Hóa đơn nhập hàng</DialogDescription>
+              <DialogTitle className="text-green-600">
+                Thêm đơn vị bán hàng
+              </DialogTitle>
+              <DialogDescription>Đơn vị</DialogDescription>
             </DialogHeader>
-            {/* <form onSubmit={handleSubmit(onSubmit)}>
+            <form onSubmit={handleSubmit(onSubmit)}>
               <FieldGroup>
-                <Command className="border rounded-md">
-                  <Input
-                    placeholder="Tìm công ty..."
-                    value={keyCompanyName}
-                    onChange={handleCompanyChange}
-                  />
-                  <CommandList>
-                    {resutlFindCom.length === 0 && (
-                      <p className="px-3 py-2 text-sm text-muted-foreground">
-                        Không tìm thấy công ty
-                      </p>
-                    )}
-
-                    {resutlFindCom.map((c) => (
-                      <CommandItem
-                        key={c._id}
-                        onSelect={() => {
-                          setValue("createdBy", c._id, {
-                            shouldValidate: true,
-                          });
-                          setKeyCompanyName(c.companyName);
-                        }}
-                      >
-                        <div className="flex flex-col">
-                          <span className="font-medium">{c.companyName}</span>
-                          <span className="text-xs text-muted-foreground">
-                            {c.address}
-                          </span>
-                        </div>
-                      </CommandItem>
-                    ))}
-                  </CommandList>
-                </Command>
                 <Field>
-                  <Label htmlFor="image">Hình ảnh</Label>
-
-                  <input
-                    type="file"
-                    accept="image/*"
-                    ref={fileInputRef}
-                    onChange={handleFileChange}
-                    style={{ display: "none" }}
-                  />
-                  {preview ? (
-                    <div style={{ marginTop: 20 }}>
-                      <img src={preview} alt="preview" width="200" />
-
-                      <div style={{ marginTop: 10 }}>
-                        <Button
-                          type="button"
-                          onClick={handleRemoveImage}
-                          className="px-3 py-1 text-white rounded"
-                        >
-                          Hủy ảnh
-                        </Button>
-                      </div>
-                    </div>
-                  ) : (
-                    <button
-                      type="button"
-                      onClick={() => fileInputRef.current.click()}
-                    >
-                      <label
-                        htmlFor="image"
-                        className="flex flex-col items-center justify-center border-2 border-dashed rounded-lg p-6 cursor-pointer hover:bg-muted transition"
-                      >
-                        <span className="text-sm text-muted-foreground">
-                          Click to upload image
-                        </span>
-                      </label>
-                    </button>
-                  )}
-                </Field>
-                <Field>
-                  <Label htmlFor="productName">Sản phẩm:</Label>
+                  <Label htmlFor="companyName">Tên công ty:</Label>
                   <Input
-                    id="productName"
-                    {...register("productName", { required: true })}
-                    placeholder="Tên sản phẩm"
+                    id="companyName"
+                    {...register("companyName", { required: true })}
+                    placeholder="Tên công ty"
                   />
                 </Field>
                 <Field>
-                  <Label htmlFor="guarantee">Bảo hành:</Label>
+                  <Label htmlFor="address">Địa chỉ:</Label>
                   <Input
-                    id="guarantee"
-                    type="number"
-                    {...register("guarantee", { required: true })}
-                    placeholder="Tháng"
+                    id="address"
+                    {...register("address", { required: true })}
+                    placeholder="Địa chỉ"
                   />
                 </Field>
                 <Field className="grid grid-cols-1 md:grid-cols-2 gap-8">
                   <div className="space-y-2">
-                    <Label htmlFor="quantity">Số lượng:</Label>
+                    <Label htmlFor="email">Email:</Label>
                     <Input
-                      id="quantity"
-                      type="number"
-                      {...register("quantity", { required: true })}
-                      placeholder="Số lượng"
+                      id="email"
+                      {...register("email", { required: true })}
+                      placeholder="example@gmail.com"
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="price">Giá:</Label>
+                    <Label htmlFor="phone">Phone:</Label>
                     <Input
-                      id="price"
+                      id="phone"
                       type="number"
-                      {...register("price", { required: true })}
-                      placeholder="VND"
+                      {...register("phone", { required: true })}
+                      placeholder="+84 "
                     />
                   </div>
-                </Field>
-                <Field>
                   <div className="space-y-2">
-                    <Label className="text-green-600" htmlFor="totalAmount">
-                      Tổng tiền: {formatVND(totalAmount)}
-                    </Label>
+                    <Label htmlFor="website">Website:</Label>
+                    <Input
+                      id="website"
+                      type="number"
+                      {...register("website", { required: true })}
+                      placeholder="https://... "
+                    />
                   </div>
                 </Field>
                 <Button
@@ -236,7 +240,7 @@ export default function SaleUnitList() {
                   {isSubmitting ? "Đang tạo..." : "Tạo hóa đơn"}
                 </Button>
               </FieldGroup>
-            </form> */}
+            </form>
           </DialogContent>
         </Dialog>
 
