@@ -36,17 +36,40 @@ interface SaleUnit {
   address: string;
   taxCode: string;
   email: string;
-  website: number;
+  website: string;
   phone: number;
-  createdAt: string;
 }
 export default function SaleUnitList() {
   const [saleUnits, setSaleUnits] = useState<SaleUnit[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const navigate = useNavigate();
   const { register, handleSubmit, reset, setValue, watch } =
     useForm<SaleUnit>();
   const onSubmit = async (data: SaleUnit) => {
-    console.log(data);
+    const { companyName, address, taxCode, email, website, phone } = data;
+    try {
+      const res = await request({
+        method: "POST",
+        url: "/saleunit/create",
+        data: { companyName, address, taxCode, email, website, phone },
+      });
+      if (res.success) {
+        // 1. reset form
+        reset();
+
+        // 3. đóng form
+        // setOpen(false);
+
+        // 4. chuyển trang
+        toast.success("Tạo đơn vị bán hàng thành công!");
+        setIsSubmitting(false);
+        setTimeout(() => {
+          navigate(0);
+        }, 500);
+      }
+    } catch (error) {
+      console.log("Lỗi thêm đơn vị bán hàng:", error);
+    }
   };
 
   useEffect(() => {
@@ -80,7 +103,7 @@ export default function SaleUnitList() {
               <DialogTitle className="text-green-600">
                 Thêm đơn vị bán hàng
               </DialogTitle>
-              <DialogDescription>Đơn vị</DialogDescription>
+              <DialogDescription>Thông tin đơn vị bán hàng</DialogDescription>
             </DialogHeader>
             <form onSubmit={handleSubmit(onSubmit)}>
               <FieldGroup>
@@ -104,8 +127,8 @@ export default function SaleUnitList() {
                   <div className="space-y-2">
                     <Label htmlFor="email">Email:</Label>
                     <Input
-                      id="quantity"
-                      {...register("email", { required: true })}
+                      id="email"
+                      {...register("email")}
                       placeholder="example@gmail.com"
                     />
                   </div>
@@ -113,9 +136,27 @@ export default function SaleUnitList() {
                     <Label htmlFor="phone">Phone:</Label>
                     <Input
                       id="phone"
-                      type="number"
+                      type="text"
                       {...register("phone", { required: true })}
                       placeholder="+84"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="website">Website:</Label>
+                    <Input
+                      id="website"
+                      type="text"
+                      {...register("website")}
+                      placeholder="https://wwww"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="taxCode">Mã số thuế:</Label>
+                    <Input
+                      id="taxCode"
+                      type="text"
+                      {...register("taxCode")}
+                      placeholder="xxxx"
                     />
                   </div>
                 </Field>
@@ -129,7 +170,7 @@ export default function SaleUnitList() {
                     type="submit"
                     className="bg-green-600 hover:bg-green-800"
                   >
-                    Tạo hóa đơn
+                    {isSubmitting ? "Đang tạo..." : "Tạo"}
                   </Button>
                 )}
               </FieldGroup>
@@ -184,7 +225,7 @@ export default function SaleUnitList() {
               <DialogTitle className="text-green-600">
                 Thêm đơn vị bán hàng
               </DialogTitle>
-              <DialogDescription>Đơn vị</DialogDescription>
+              <DialogDescription>Thông tin đơn vị bán hàng</DialogDescription>
             </DialogHeader>
             <form onSubmit={handleSubmit(onSubmit)}>
               <FieldGroup>
@@ -209,7 +250,7 @@ export default function SaleUnitList() {
                     <Label htmlFor="email">Email:</Label>
                     <Input
                       id="email"
-                      {...register("email", { required: true })}
+                      {...register("email")}
                       placeholder="example@gmail.com"
                     />
                   </div>
@@ -226,9 +267,18 @@ export default function SaleUnitList() {
                     <Label htmlFor="website">Website:</Label>
                     <Input
                       id="website"
-                      type="number"
-                      {...register("website", { required: true })}
+                      type="text"
+                      {...register("website")}
                       placeholder="https://... "
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="taxCode">Mã số thuế:</Label>
+                    <Input
+                      id="taxCode"
+                      type="text"
+                      {...register("taxCode")}
+                      placeholder="xxxx"
                     />
                   </div>
                 </Field>
@@ -237,7 +287,7 @@ export default function SaleUnitList() {
                   className="bg-green-600 hover:bg-green-800"
                   disabled={isSubmitting}
                 >
-                  {isSubmitting ? "Đang tạo..." : "Tạo hóa đơn"}
+                  {isSubmitting ? "Đang tạo..." : "Tạo"}
                 </Button>
               </FieldGroup>
             </form>
@@ -255,7 +305,7 @@ export default function SaleUnitList() {
           >
             {/* ID + Date */}
             <div className="flex justify-between text-sm text-muted-foreground">
-              <span className="truncate max-w-[60%]">{item._id}</span>
+              <span className="truncate max-w-[60%]">{item.phone}</span>
               <span>
                 {/* {new Date(item.createdAt).toLocaleDateString("vi-VN")} */}
                 {new Date(item.createdAt).toLocaleString("vi-VN")}

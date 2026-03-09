@@ -39,7 +39,7 @@ function App() {
         }
       } catch (error) {
         console.log(error);
-        setStatus("error");
+        setStatus("errorToken");
       }
     };
     fetchUserInfor();
