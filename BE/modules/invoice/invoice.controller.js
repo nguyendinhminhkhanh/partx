@@ -89,12 +89,18 @@ const getInvoiceById = async (req, res) => {
 };
 
 //[DELETE] /api/invoice/:id
-const deleteInvoice = () => {
-  console.log("del");
+const deleteInvoice = async (req, res) => {
+  const { id } = req.params;
+  const deleteInvoice = await InvoiceModel.findByIdAndDelete(id);
+  res.send({
+    success: 1,
+    data: deleteInvoice,
+  });
 };
 
 module.exports = {
   createInvoice,
   getAllInvoice,
   getInvoiceById,
+  deleteInvoice,
 };

@@ -104,6 +104,7 @@ export default function SaleUnitList() {
       setTimeout(() => {
         navigate(0);
       }, 500);
+      toast.success("Đã xoá đơn vị bán hàng!");
       console.log(res);
     } catch (error) {
       console.log("Lỗi xóa saleUnit: ", error);
@@ -225,7 +226,7 @@ export default function SaleUnitList() {
                 <TableCell>{item.companyName}</TableCell>
                 <TableCell>{item.address}</TableCell>
                 <TableCell>{item.phone}</TableCell>
-                <TableCell>
+                <TableCell onClick={(e) => e.stopPropagation()}>
                   <ActionMenu
                     onEdit={() => handleEdit(item._id)}
                     onDelete={() => handleDelete(item._id)}
@@ -330,12 +331,22 @@ export default function SaleUnitList() {
             className="rounded-xl border border-border bg-background p-4 shadow-sm"
           >
             {/* ID + Date */}
-            <div className="flex justify-between text-sm text-muted-foreground">
-              <span className="truncate max-w-[60%]">{item.phone}</span>
-              <span>
-                {/* {new Date(item.createdAt).toLocaleDateString("vi-VN")} */}
-                {new Date(item.createdAt).toLocaleString("vi-VN")}
-              </span>
+            <div className="flex items-start justify-between gap-3">
+              <div className="flex flex-col text-sm text-muted-foreground">
+                <span className="font-medium text-foreground truncate">
+                  {item.phone}
+                </span>
+                <span>
+                  {/* {new Date(item.createdAt).toLocaleDateString("vi-VN")} */}
+                  {new Date(item.createdAt).toLocaleString("vi-VN")}
+                </span>
+              </div>
+              <div onClick={(e) => e.stopPropagation()}>
+                <ActionMenu
+                  onEdit={() => handleEdit(item._id)}
+                  onDelete={() => handleDelete(item._id)}
+                />
+              </div>
             </div>
 
             {/* Company */}

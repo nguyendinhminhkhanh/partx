@@ -29,6 +29,7 @@ import { useNavigate } from "react-router";
 import { toast } from "sonner";
 // import { Separator } from "../../components/ui/separator";
 import { ScrollArea } from "../../components/ui/scroll-area";
+import ActionMenu from "../../components/ActionMenu";
 
 interface Invoice {
   _id: string;
@@ -236,6 +237,27 @@ export default function InvoiceList() {
     }
   };
 
+  const handleEdit = async (id: string) => {
+    console.log("Edit Invoice:", id);
+  };
+
+  const handleDelete = async (id: string) => {
+    console.log("Delete Invoice:", id);
+    try {
+      const res = await request({
+        method: "DELETE",
+        url: `/invoice/${id}`,
+      });
+      setTimeout(() => {
+        navigate(0);
+      }, 500);
+      toast.success("Đã xoá hoá đơn nhập hàng!");
+      console.log(res);
+    } catch (error) {
+      console.log("Lỗi xóa Invoice: ", error);
+    }
+  };
+
   return (
     <MainLayout>
       <div className="hidden md:block">
@@ -407,6 +429,7 @@ export default function InvoiceList() {
               <TableHead className="text-right">Số lượng</TableHead>
               <TableHead className="text-right">Đơn giá</TableHead>
               <TableHead className="text-right">Tổng tiền</TableHead>
+              <TableHead></TableHead>
             </TableRow>
           </TableHeader>
 
@@ -432,6 +455,12 @@ export default function InvoiceList() {
                 </TableCell>
                 <TableCell className="text-right">
                   {formatVND(item.totalAmount)}
+                </TableCell>
+                <TableCell onClick={(e) => e.stopPropagation()}>
+                  <ActionMenu
+                    onEdit={() => handleEdit(item._id)}
+                    onDelete={() => handleDelete(item._id)}
+                  />
                 </TableCell>
               </TableRow>
             ))}
@@ -594,12 +623,22 @@ export default function InvoiceList() {
             className="rounded-xl border border-border bg-background p-4 shadow-sm"
           >
             {/* ID + Date */}
-            <div className="flex justify-between text-sm text-muted-foreground">
-              <span className="truncate max-w-[60%]">{item._id}</span>
-              <span>
-                {/* {new Date(item.createdAt).toLocaleDateString("vi-VN")} */}
-                {new Date(item.createdAt).toLocaleString("vi-VN")}
-              </span>
+            <div className="flex items-start justify-between gap-3">
+              <div className="flex flex-col text-sm text-muted-foreground">
+                <span className="font-medium text-foreground truncate">
+                  {item._id}
+                </span>
+                <span>
+                  {/* {new Date(item.createdAt).toLocaleDateString("vi-VN")} */}
+                  {new Date(item.createdAt).toLocaleString("vi-VN")}
+                </span>
+              </div>
+              <div onClick={(e) => e.stopPropagation()}>
+                <ActionMenu
+                  onEdit={() => handleEdit(item._id)}
+                  onDelete={() => handleDelete(item._id)}
+                />
+              </div>
             </div>
 
             {/* Company */}
@@ -609,7 +648,9 @@ export default function InvoiceList() {
 
             {/* Product + Quantity */}
             <div className="flex justify-between mt-3 text-sm">
-              <span className="text-foreground">{item.productName}</span>
+              <span className="text-foreground truncate  max-w-[70%]">
+                {item.productName}
+              </span>
               <span className="text-muted-foreground">
                 SL:{" "}
                 <span className="font-medium text-foreground">

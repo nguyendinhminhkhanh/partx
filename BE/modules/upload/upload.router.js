@@ -22,7 +22,7 @@ const storage = new CloudinaryStorage({
 });
 
 const upload = multer({ storage: storage });
-
+console.log(cloudinary.config());
 // [POST] /api/upload
 router.post("/", upload.single("file"), uploadController.uploadClound);
 module.exports = router;
