@@ -1,4 +1,5 @@
 import { MainLayout } from "../../components/Layout";
+import ActionMenu from "../../components/ActionMenu";
 import {
   Table,
   TableBody,
@@ -38,6 +39,7 @@ interface SaleUnit {
   email: string;
   website: string;
   phone: number;
+  createdAt: string;
 }
 export default function SaleUnitList() {
   const [saleUnits, setSaleUnits] = useState<SaleUnit[]>([]);
@@ -87,6 +89,26 @@ export default function SaleUnitList() {
     };
     fetchInvoice();
   }, []);
+
+  const handleEdit = async (id: string) => {
+    console.log("Edit saleUnit:", id);
+  };
+
+  const handleDelete = async (id: string) => {
+    console.log("Delete saleUnit:", id);
+    try {
+      const res = await request({
+        method: "DELETE",
+        url: `/saleunit/${id}`,
+      });
+      setTimeout(() => {
+        navigate(0);
+      }, 500);
+      console.log(res);
+    } catch (error) {
+      console.log("Lỗi xóa saleUnit: ", error);
+    }
+  };
   return (
     <MainLayout>
       <div className="hidden md:block">
@@ -184,8 +206,6 @@ export default function SaleUnitList() {
               <TableHead>Đơn vị bán hàng</TableHead>
               <TableHead>Tên sản phẩm</TableHead>
               <TableHead>SDT</TableHead>
-              <TableHead className="text-right">Đơn giá</TableHead>
-              <TableHead className="text-right">Tổng tiền</TableHead>
             </TableRow>
           </TableHeader>
 
@@ -205,6 +225,12 @@ export default function SaleUnitList() {
                 <TableCell>{item.companyName}</TableCell>
                 <TableCell>{item.address}</TableCell>
                 <TableCell>{item.phone}</TableCell>
+                <TableCell>
+                  <ActionMenu
+                    onEdit={() => handleEdit(item._id)}
+                    onDelete={() => handleDelete(item._id)}
+                  />
+                </TableCell>
               </TableRow>
             ))}
           </TableBody>
