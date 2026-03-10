@@ -1,7 +1,6 @@
 //thông tin nhà cung cấp hàng hóa cho minhg
 // cần có chứ năng check xem đơn vị bán hàng đã tồn tại chưa nếu chưa thì mới tạo mới
 const SalesUnitModel = require("./salesUnit");
-const SaleModel = require("../salesUnit/salesUnit");
 // [POST] /api/salesUnit/create
 const createSalesUnit = async (req, res) => {
   const { companyName, address, taxCode, email, website, phone } = req.body;
@@ -28,7 +27,7 @@ const createSalesUnit = async (req, res) => {
 //[GET] /api/saleunit
 const getAllSalesUnit = async (req, res) => {
   try {
-    const salesUnit = await SaleModel.find().sort({ createdAt: -1 });
+    const salesUnit = await SalesUnitModel.find().sort({ createdAt: -1 });
     res.send({ success: 1, data: salesUnit });
   } catch (error) {
     res.status(400).send({
@@ -67,9 +66,21 @@ const getSalesUnitByCom = async (req, res) => {
   res.send({ success: 1, data: salesUnit });
 };
 
+//[DELETE] /api/saleUnit/:id
+const deleteSaleUnit = async (req, res) => {
+  console.log("delete saleUnit");
+  const { id } = req.params;
+  const deleteSaleUnit = await SalesUnitModel.findByIdAndDelete(id);
+  res.send({
+    success: 1,
+    data: deleteSaleUnit,
+  });
+};
+
 module.exports = {
   createSalesUnit,
   getAllSalesUnit,
   getSalesUnitById,
   getSalesUnitByCom,
+  deleteSaleUnit,
 };
