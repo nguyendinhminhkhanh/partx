@@ -242,21 +242,35 @@ export default function InvoiceList() {
   };
 
   const handleDelete = async (id: string) => {
+  try {
     console.log("Delete Invoice:", id);
-    try {
-      const res = await request({
-        method: "DELETE",
-        url: `/invoice/${id}`,
+
+    // 1. Lấy invoice
+    const invoice = await request.get(`/invoice/${id}`);
+    const imageUrl = invoice.data.imageUrl;
+
+    // 2. Xoá ảnh Cloudinary (nếu có)
+    if (imageUrl) {
+      const deleteImage = await request.delete("/upload", {
+        data: { imageUrl },
       });
-      setTimeout(() => {
-        navigate(0);
-      }, 500);
-      toast.success("Đã xoá hoá đơn nhập hàng!");
-      console.log(res);
-    } catch (error) {
-      console.log("Lỗi xóa Invoice: ", error);
+      console.log("Delete image result:", deleteImage);
     }
-  };
+
+    // 3. Xoá invoice
+    await request.delete(`/invoice/${id}`);
+
+    toast.success("Đã xoá hoá đơn nhập hàng!");
+
+    setTimeout(() => {
+      navigate(0);
+    }, 500);
+
+  } catch (error) {
+    console.log("Lỗi xóa Invoice:", error);
+    toast.error("Xóa hóa đơn thất bại!");
+  }
+};
 
   return (
     <MainLayout>

@@ -25,4 +25,6 @@ const upload = multer({ storage: storage });
 console.log(cloudinary.config());
 // [POST] /api/upload
 router.post("/", upload.single("file"), uploadController.uploadClound);
+//[DELETE] /api/upload/partx_uploads/:public_id
+router.delete("/", uploadController.deleteClound);
 module.exports = router;
