@@ -4,45 +4,63 @@ const InvoiceModel = require("./invoice");
 //[POST] /api/invoice/create
 // Logic to create an invoice
 const createInvoice = async (req, res) => {
-  const {
-    imageUrl,
-    productCode,
-    productName,
-    quantity,
-    price,
-    guarantee,
-    createdBy,
-  } = req.body;
-  const q = Number(quantity);
-  const p = Number(price);
-  if (!Number.isFinite(q) || !Number.isFinite(p)) {
-    return res.status(400).json({
+  try {
+    const { imageUrl, items, createdBy } = req.body;
+
+    if (!items || items.length === 0) {
+      return res.status(400).json({
+        success: 0,
+        message: "Invoice phải có ít nhất 1 sản phẩm",
+      });
+    }
+
+    let totalAmount = 0;
+
+    const processedItems = items.map((item) => {
+      const q = Number(item.quantity);
+      const p = Number(item.price);
+      const g = Number(item.guarantee);
+
+      if (!Number.isFinite(q) || !Number.isFinite(p)) {
+        throw new Error("Quantity và price phải là số");
+      }
+
+      if (q <= 0 || p <= 0) {
+        throw new Error("Quantity và price phải > 0");
+      }
+
+      const total = q * p;
+      totalAmount += total;
+
+      return {
+        productCode: item.productCode,
+        productName: item.productName,
+        guarantee: g,
+        quantity: q,
+        price: p,
+        total,
+      };
+    });
+
+    const newInvoice = await InvoiceModel.create({
+      imageUrl,
+      items: processedItems,
+      totalAmount,
+      createdBy,
+    });
+
+    console.log("New Invoice Created:", newInvoice);
+
+    res.send({
+      success: 1,
+      data: newInvoice,
+    });
+  } catch (error) {
+    res.status(400).json({
       success: 0,
-      message: "Quantity và price phải là số",
+      message: error.message,
     });
   }
-  if (q <= 0 || p <= 0) {
-    return res.status(400).json({
-      success: 0,
-      message: "Quantity và price phải > 0",
-    });
-  }
-  const totalAmount = q * p;
-  const newInvoice = await InvoiceModel.create({
-    imageUrl,
-    productCode,
-    productName,
-    quantity: q,
-    price: p,
-    totalAmount,
-    guarantee,
-    createdBy,
-  });
-  console.log("New Invoice Created:", newInvoice);
-  res.send({
-    success: 1,
-    data: newInvoice,
-  });
 };
 
 //[GET] /api/invoice

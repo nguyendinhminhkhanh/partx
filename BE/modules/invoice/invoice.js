@@ -3,20 +3,22 @@ const mongoose = require("mongoose");
 //hóa đơn bán hàng
 const InvoiceSchema = mongoose.Schema(
   {
-    imageUrl: {
-      type: String,
-      require: true,
-    },
-    productCode: { type: String },
-    productName: { type: String, required: true },
-    quantity: { type: Number, required: true },
-    price: { type: Number, required: true }, //đơn giá
-    totalAmount: { type: Number, required: true }, //tổng tiền
-    guarantee: { type: Number, required: true }, //thời gian bảo hành theo tháng
+    imageUrl: { type: String, required: true },
+    items: [
+      {
+        productCode: { type: String },
+        productName: { type: String, required: true },
+        guarantee: { type: Number, required: true },
+        quantity: { type: Number, required: true },
+        price: { type: Number, required: true },
+        total: { type: Number, required: true },
+      },
+    ],
+    totalAmount: { type: Number, required: true },
     createdBy: {
       type: mongoose.Schema.Types.ObjectId,
-      required: true,
       ref: "SaleUnit",
+      required: true,
     },
   },
   {

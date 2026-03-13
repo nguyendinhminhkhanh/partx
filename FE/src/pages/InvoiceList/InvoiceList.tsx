@@ -7,10 +7,8 @@ import {
   TableHeader,
   TableRow,
 } from "../../components/ui/table";
-import { Command, CommandItem, CommandList } from "../../components/ui/command";
 import { Button } from "../../components/ui/button";
-import { Spinner } from "../../components/ui/spinner";
-import { useForm } from "react-hook-form";
+import { useFieldArray, useForm } from "react-hook-form";
 import {
   Dialog,
   DialogContent,
@@ -19,26 +17,31 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "../../components/ui/dialog";
-import { Field, FieldGroup } from "../../components/ui/field";
 import { useEffect, useRef, useState } from "react";
 import request from "../../api/request";
 // import { toast } from "sonner";
-import { Label } from "../../components/ui/label";
-import { Input } from "../../components/ui/input";
 import { useNavigate } from "react-router";
 import { toast } from "sonner";
 // import { Separator } from "../../components/ui/separator";
 import { ScrollArea } from "../../components/ui/scroll-area";
 import ActionMenu from "../../components/ActionMenu";
+import { Plus } from "lucide-react";
+
+import CreateInvoiceDialog from "../../components/CreateInvoiceDialog";
+
+interface InvoiceItem {
+  productCode?: string;
+  productName: string;
+  guarantee?: number;
+  quantity?: number;
+  price?: number;
+  total?: number;
+}
 
 interface Invoice {
   _id: string;
-  productCode: string;
   imageUrl: string;
-  productName: string;
-  quantity: string;
-  guarantee: number;
-  price: number;
+  items?: InvoiceItem[];
   totalAmount: number;
   createdBy?: {
     _id: string;
@@ -67,7 +70,24 @@ export default function InvoiceList() {
 
   const navigate = useNavigate();
 
-  const { register, handleSubmit, reset, setValue, watch } = useForm<Invoice>();
+  const { register, handleSubmit, reset, setValue, watch, control } =
+    useForm<Invoice>({
+      defaultValues: {
+        items: [
+          {
+            productName: "",
+            guarantee: undefined,
+            quantity: undefined,
+            price: undefined,
+          },
+        ],
+      },
+    });
+  const { fields, append, remove } = useFieldArray({
+    control,
+    name: "items",
+  });
+
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const [invoices, setInvoices] = useState<Invoice[]>([]);
@@ -242,35 +262,34 @@ export default function InvoiceList() {
   };
 
   const handleDelete = async (id: string) => {
-  try {
-    console.log("Delete Invoice:", id);
+    try {
+      console.log("Delete Invoice:", id);
 
-    // 1. Lấy invoice
-    const invoice = await request.get(`/invoice/${id}`);
-    const imageUrl = invoice.data.imageUrl;
+      // 1. Lấy invoice
+      const invoice = await request.get(`/invoice/${id}`);
+      const imageUrl = invoice.data.imageUrl;
 
-    // 2. Xoá ảnh Cloudinary (nếu có)
-    if (imageUrl) {
-      const deleteImage = await request.delete("/upload", {
-        data: { imageUrl },
-      });
-      console.log("Delete image result:", deleteImage);
+      // 2. Xoá ảnh Cloudinary (nếu có)
+      if (imageUrl) {
+        const deleteImage = await request.delete("/upload", {
+          data: { imageUrl },
+        });
+        console.log("Delete image result:", deleteImage);
+      }
+
+      // 3. Xoá invoice
+      await request.delete(`/invoice/${id}`);
+
+      toast.success("Đã xoá hoá đơn nhập hàng!");
+
+      setTimeout(() => {
+        navigate(0);
+      }, 500);
+    } catch (error) {
+      console.log("Lỗi xóa Invoice:", error);
+      toast.error("Xóa hóa đơn thất bại!");
     }
-
-    // 3. Xoá invoice
-    await request.delete(`/invoice/${id}`);
-
-    toast.success("Đã xoá hoá đơn nhập hàng!");
-
-    setTimeout(() => {
-      navigate(0);
-    }, 500);
-
-  } catch (error) {
-    console.log("Lỗi xóa Invoice:", error);
-    toast.error("Xóa hóa đơn thất bại!");
-  }
-};
+  };
 
   return (
     <MainLayout>
@@ -278,160 +297,33 @@ export default function InvoiceList() {
         <Dialog>
           <div className="flex justify-end m-4 text-sm">
             <DialogTrigger asChild>
-              <Button className="bg-green-600 hover:bg-green-800">
-                Tạo Hóa Đơn
-              </Button>
+              <CreateInvoiceDialog
+                form={{
+                  handleSubmit,
+                  onSubmit,
+                  register,
+                  fields,
+                  append,
+                  remove,
+                  setValue,
+                  keyCompanyName,
+                  handleCompanyChange,
+                  resutlFindCom,
+                  fileInputRef,
+                  preview,
+                  handleFileChange,
+                  handleRemoveImage,
+                  formatVND,
+                  totalAmount,
+                  isSubmitting,
+                }}
+              >
+                <Button className="bg-green-600 hover:bg-green-800">
+                  <Plus /> Tạo Hóa Đơn
+                </Button>
+              </CreateInvoiceDialog>
             </DialogTrigger>
           </div>
-          <DialogContent className=" w-[95vw] max-w-5xl max-h-[90vh] overflow-y-auto rounded-lg">
-            <DialogHeader>
-              <DialogTitle className="text-green-600">Tạo hóa đơn</DialogTitle>
-              <DialogDescription>Hóa đơn nhập hàng</DialogDescription>
-            </DialogHeader>
-            <form onSubmit={handleSubmit(onSubmit)}>
-              <FieldGroup>
-                <Command className="border rounded-md">
-                  <Input
-                    placeholder="Tìm công ty..."
-                    value={keyCompanyName}
-                    onChange={handleCompanyChange}
-                  />
-                  <CommandList>
-                    {resutlFindCom.length === 0 && (
-                      <p className="px-3 py-2 text-sm text-muted-foreground">
-                        Không tìm thấy công ty
-                      </p>
-                    )}
-
-                    {resutlFindCom.map((c) => (
-                      <CommandItem
-                        key={c._id}
-                        onSelect={() => {
-                          setValue("createdBy", c._id, {
-                            shouldValidate: true,
-                          });
-                          setKeyCompanyName(c.companyName);
-                        }}
-                      >
-                        <div className="flex flex-col">
-                          <span className="font-medium">{c.companyName}</span>
-                          <span className="text-xs text-muted-foreground">
-                            {c.address}
-                          </span>
-                        </div>
-                      </CommandItem>
-                    ))}
-                  </CommandList>
-                </Command>
-                <Field>
-                  <Label htmlFor="image">Hình ảnh</Label>
-
-                  <input
-                    type="file"
-                    accept="image/*"
-                    ref={fileInputRef}
-                    onChange={handleFileChange}
-                    style={{ display: "none" }}
-                  />
-                  {preview ? (
-                    <div style={{ marginTop: 20 }}>
-                      <img src={preview} alt="preview" width="200" />
-
-                      <div style={{ marginTop: 10 }}>
-                        <button
-                          type="button"
-                          onClick={handleRemoveImage}
-                          className=" bg-black bg-opacity-60 text-white rounded-full px-2"
-                        >
-                          X
-                        </button>
-                      </div>
-                    </div>
-                  ) : (
-                    <button
-                      type="button"
-                      onClick={() => fileInputRef.current.click()}
-                    >
-                      <label
-                        htmlFor="image"
-                        className="flex flex-col items-center justify-center border-2 border-dashed rounded-lg p-6 cursor-pointer hover:bg-muted transition"
-                      >
-                        {/* {previewImage ? (
-                      <img
-                        src={previewImage}
-                        alt="preview"
-                        className="h-32 w-32 object-cover rounded-md"
-                      />
-                    ) : ( */}
-                        <span className="text-sm text-muted-foreground">
-                          Click to upload image
-                        </span>
-                        {/* )} */}
-                      </label>
-                    </button>
-                  )}
-                </Field>
-                <Field>
-                  <Label htmlFor="productName">Sản phẩm:</Label>
-                  <Input
-                    id="productName"
-                    {...register("productName", { required: true })}
-                    placeholder="Tên sản phẩm"
-                  />
-                </Field>
-                <Field>
-                  <Label htmlFor="guarantee">Bảo hành:</Label>
-                  <Input
-                    id="guarantee"
-                    type="number"
-                    {...register("guarantee", { required: true })}
-                    placeholder="Tháng"
-                  />
-                </Field>
-                <Field className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                  <div className="space-y-2">
-                    <Label htmlFor="quantity">Số lượng:</Label>
-                    <Input
-                      id="quantity"
-                      type="number"
-                      {...register("quantity", { required: true })}
-                      placeholder="Số lượng"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="price">Giá:</Label>
-                    <Input
-                      id="price"
-                      type="number"
-                      {...register("price", { required: true })}
-                      placeholder="VND"
-                    />
-                  </div>
-                </Field>
-                <Field>
-                  <div className="space-y-2">
-                    <Label className="text-green-600" htmlFor="totalAmount">
-                      Tổng tiền: {formatVND(totalAmount)}
-                    </Label>
-                  </div>
-                </Field>
-
-                {isSubmitting ? (
-                  <Button variant="secondary" disabled>
-                    Đang tạo...
-                    <Spinner data-icon="inline-start" />
-                  </Button>
-                ) : (
-                  <Button
-                    type="submit"
-                    className="bg-green-600 hover:bg-green-800"
-                  >
-                    Tạo hóa đơn
-                  </Button>
-                )}
-              </FieldGroup>
-            </form>
-          </DialogContent>
         </Dialog>
         <Table>
           <TableHeader>
@@ -440,8 +332,6 @@ export default function InvoiceList() {
               <TableHead>Thời gian</TableHead>
               <TableHead>Đơn vị bán hàng</TableHead>
               <TableHead>Tên sản phẩm</TableHead>
-              <TableHead className="text-right">Số lượng</TableHead>
-              <TableHead className="text-right">Đơn giá</TableHead>
               <TableHead className="text-right">Tổng tiền</TableHead>
               <TableHead></TableHead>
             </TableRow>
@@ -462,10 +352,14 @@ export default function InvoiceList() {
                   {new Date(item.createdAt).toLocaleString("vi-VN")}
                 </TableCell>
                 <TableCell>{item.createdBy?.companyName}</TableCell>
-                <TableCell>{item.productName}</TableCell>
-                <TableCell className="text-right">{item.quantity}</TableCell>
-                <TableCell className="text-right">
-                  {formatVND(item.price)}
+                <TableCell>
+                  <div className="flex flex-col">
+                    {item.items?.map((i, index) => (
+                      <span key={index} className="truncate">
+                        {i.productName}
+                      </span>
+                    ))}
+                  </div>
                 </TableCell>
                 <TableCell className="text-right">
                   {formatVND(item.totalAmount)}
@@ -481,150 +375,40 @@ export default function InvoiceList() {
           </TableBody>
         </Table>
       </div>
+
       {/* //mobile */}
       <div className="md:hidden space-y-3 m-3">
-        <Dialog
-        //  open={open} onOpenChange={setOpen}
-        >
+        <Dialog>
           <div className="">
             <DialogTrigger asChild>
-              <Button className="bg-green-600 ">Tạo Hóa Đơn</Button>
+              <CreateInvoiceDialog
+                form={{
+                  handleSubmit,
+                  onSubmit,
+                  register,
+                  fields,
+                  append,
+                  remove,
+                  setValue,
+                  keyCompanyName,
+                  handleCompanyChange,
+                  resutlFindCom,
+                  fileInputRef,
+                  preview,
+                  handleFileChange,
+                  handleRemoveImage,
+                  formatVND,
+                  totalAmount,
+                  isSubmitting,
+                }}
+              >
+                <Button className="bg-green-600 w-full">
+                  {" "}
+                  <Plus /> Tạo Hóa Đơn
+                </Button>
+              </CreateInvoiceDialog>
             </DialogTrigger>
           </div>
-          <DialogContent className=" w-[95vw] max-w-5xl max-h-[90vh] overflow-y-auto rounded-lg">
-            <DialogHeader>
-              <DialogTitle className="text-green-600">Tạo hóa đơn</DialogTitle>
-              <DialogDescription>Hóa đơn nhập hàng</DialogDescription>
-            </DialogHeader>
-            <form onSubmit={handleSubmit(onSubmit)}>
-              <FieldGroup>
-                <Command className="border rounded-md">
-                  <Input
-                    placeholder="Tìm công ty..."
-                    value={keyCompanyName}
-                    onChange={handleCompanyChange}
-                  />
-                  <CommandList>
-                    {resutlFindCom.length === 0 && (
-                      <p className="px-3 py-2 text-sm text-muted-foreground">
-                        Không tìm thấy công ty
-                      </p>
-                    )}
-
-                    {resutlFindCom.map((c) => (
-                      <CommandItem
-                        key={c._id}
-                        onSelect={() => {
-                          setValue("createdBy", c._id, {
-                            shouldValidate: true,
-                          });
-                          setKeyCompanyName(c.companyName);
-                        }}
-                      >
-                        <div className="flex flex-col">
-                          <span className="font-medium">{c.companyName}</span>
-                          <span className="text-xs text-muted-foreground">
-                            {c.address}
-                          </span>
-                        </div>
-                      </CommandItem>
-                    ))}
-                  </CommandList>
-                </Command>
-                <Field>
-                  <Label htmlFor="image">Hình ảnh</Label>
-
-                  <input
-                    type="file"
-                    accept="image/*"
-                    ref={fileInputRef}
-                    onChange={handleFileChange}
-                    style={{ display: "none" }}
-                  />
-                  {preview ? (
-                    <div style={{ marginTop: 20 }}>
-                      <img src={preview} alt="preview" width="200" />
-
-                      <div style={{ marginTop: 10 }}>
-                        <Button
-                          type="button"
-                          onClick={handleRemoveImage}
-                          className="px-3 py-1 text-white rounded"
-                        >
-                          Hủy ảnh
-                        </Button>
-                      </div>
-                    </div>
-                  ) : (
-                    <button
-                      type="button"
-                      onClick={() => fileInputRef.current.click()}
-                    >
-                      <label
-                        htmlFor="image"
-                        className="flex flex-col items-center justify-center border-2 border-dashed rounded-lg p-6 cursor-pointer hover:bg-muted transition"
-                      >
-                        <span className="text-sm text-muted-foreground">
-                          Click to upload image
-                        </span>
-                      </label>
-                    </button>
-                  )}
-                </Field>
-                <Field>
-                  <Label htmlFor="productName">Sản phẩm:</Label>
-                  <Input
-                    id="productName"
-                    {...register("productName", { required: true })}
-                    placeholder="Tên sản phẩm"
-                  />
-                </Field>
-                <Field>
-                  <Label htmlFor="guarantee">Bảo hành:</Label>
-                  <Input
-                    id="guarantee"
-                    type="number"
-                    {...register("guarantee", { required: true })}
-                    placeholder="Tháng"
-                  />
-                </Field>
-                <Field className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                  <div className="space-y-2">
-                    <Label htmlFor="quantity">Số lượng:</Label>
-                    <Input
-                      id="quantity"
-                      type="number"
-                      {...register("quantity", { required: true })}
-                      placeholder="Số lượng"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="price">Giá:</Label>
-                    <Input
-                      id="price"
-                      type="number"
-                      {...register("price", { required: true })}
-                      placeholder="VND"
-                    />
-                  </div>
-                </Field>
-                <Field>
-                  <div className="space-y-2">
-                    <Label className="text-green-600" htmlFor="totalAmount">
-                      Tổng tiền: {formatVND(totalAmount)}
-                    </Label>
-                  </div>
-                </Field>
-                <Button
-                  type="submit"
-                  className="bg-green-600 hover:bg-green-800"
-                  disabled={isSubmitting}
-                >
-                  {isSubmitting ? "Đang tạo..." : "Tạo hóa đơn"}
-                </Button>
-              </FieldGroup>
-            </form>
-          </DialogContent>
         </Dialog>
 
         {invoices.map((item) => (
@@ -661,27 +445,19 @@ export default function InvoiceList() {
             </div>
 
             {/* Product + Quantity */}
-            <div className="flex justify-between mt-3 text-sm">
-              <span className="text-foreground truncate  max-w-[70%]">
-                {item.productName}
-              </span>
-              <span className="text-muted-foreground">
-                SL:{" "}
-                <span className="font-medium text-foreground">
-                  {item.quantity}
+            {item.items.map((product) => (
+              <div key={product._id} className="flex justify-between text-sm">
+                <span className="text-foreground truncate  max-w-[70%]">
+                  {product.productName}
                 </span>
-              </span>
-            </div>
+                <span className="font-medium text-foreground">
+                  x{product.quantity}
+                </span>
+              </div>
+            ))}
 
             {/* Price + Total */}
             <div className="flex justify-between mt-3 text-sm">
-              <span className="text-muted-foreground">
-                Đơn giá:{" "}
-                <span className="font-medium text-foreground">
-                  {formatVND(item.price)}
-                </span>
-              </span>
-
               <span className="font-semibold text-primary">
                 Tổng: {formatVND(item.totalAmount)}
               </span>
@@ -720,44 +496,71 @@ export default function InvoiceList() {
                 </div>
 
                 {/* INFO */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm mt-4">
-                  <div className="space-y-1">
-                    <p className="text-muted-foreground">Mã hóa đơn</p>
-                    <p className="font-medium break-all">
+                <div className="space-y-4 mt-4 text-sm">
+                  <div className="space-y-1 md:flex md:items-center md:gap-2 md:space-y-0">
+                    <p className="text-muted-foreground">Mã hóa đơn:</p>
+                    <p className="font-medium break-words">
                       {selectedInvoice._id}
                     </p>
                   </div>
-
-                  <div className="space-y-1">
-                    <p className="text-muted-foreground">Đơn vị bán</p>
+                  <div className="space-y-1 md:flex md:items-center md:gap-2 md:space-y-0">
+                    <p className="text-muted-foreground">Đơn vị bán:</p>
                     <p className="font-medium break-words">
                       {selectedInvoice.createdBy?.companyName}
                     </p>
                   </div>
 
-                  <div className="space-y-1">
-                    <p className="text-muted-foreground">Sản phẩm</p>
-                    <p className="font-medium break-words">
-                      {selectedInvoice.productName}
-                    </p>
+                  <div className="mt-4">
+                    <p className="font-semibold mb-2">Danh sách sản phẩm</p>
+
+                    <div className="border rounded-lg overflow-hidden">
+                      <table className="w-full text-sm">
+                        <thead className="bg-muted">
+                          <tr>
+                            <th className="p-2 text-left">Mã SP</th>
+                            <th className="p-2 text-left">Tên SP</th>
+                            <th className="p-2 text-center">SL</th>
+                            <th className="p-2 text-right">Đơn giá</th>
+                            <th className="p-2 text-right">Tổng</th>
+                            <th className="p-2 text-center">BH</th>
+                          </tr>
+                        </thead>
+
+                        <tbody>
+                          {selectedInvoice.items?.map((item, index) => (
+                            <tr key={index} className="border-t">
+                              <td className="p-2">{item.productCode}</td>
+
+                              <td className="p-2">{item.productName}</td>
+
+                              <td className="p-2 text-center">
+                                {item.quantity}
+                              </td>
+
+                              <td className="p-2 text-right">
+                                {formatVND(item.price)}
+                              </td>
+
+                              <td className="p-2 text-right font-medium text-green-600">
+                                {formatVND(item.total)}
+                              </td>
+
+                              <td className="p-2 text-center">
+                                {item.guarantee} T
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
                   </div>
 
                   <div className="space-y-1">
-                    <p className="text-muted-foreground">Số lượng</p>
-                    <p className="font-medium">{selectedInvoice.quantity}</p>
-                  </div>
-
-                  <div className="space-y-1">
-                    <p className="text-muted-foreground">Đơn giá</p>
-                    <p className="font-medium">
-                      {formatVND(selectedInvoice.price)}
-                    </p>
-                  </div>
-
-                  <div className="space-y-1">
-                    <p className="text-muted-foreground">Tổng tiền</p>
-                    <p className="font-semibold text-green-600">
-                      {formatVND(selectedInvoice.totalAmount)}
+                    <p className="text-muted-foreground">
+                      Tổng tiền:{" "}
+                      <span className="font-semibold text-green-600">
+                        {formatVND(selectedInvoice.totalAmount)}
+                      </span>
                     </p>
                   </div>
                 </div>
