@@ -39,18 +39,20 @@ export default function Login() {
         url: "/auth/login",
         data: { username, password },
       });
-      toast.success("Đăng nhập thành công.");
-      // console.log("res: ", res);
       if (res.success) {
-        const { token, fullName, _id, username, email, phone, createdAt } =
+        const { token, fullName, _id, username, email, phone, createdAt, avatar } =
           res.data;
-        // console.log("ten: ", fullName,username ,email,phone,createdAt);
         localStorage.setItem("token", token);
-        setUser({ _id, fullName, username, email, phone, createdAt });
+        setUser({ _id, fullName, username, email, phone, createdAt, avatar });
+        toast.success("Đăng nhập thành công.");
+        navigate("/");
+      } else {
+        toast.error("Thông tin đăng nhập không chính xác.");
       }
-      navigate("/");
-    } catch (error) {
-      toast.error("Thông tin đăng nhập không chính xác.");
+    } catch (error: any) {
+      const message =
+        error?.response?.data?.message || "Thông tin đăng nhập không chính xác.";
+      toast.error(message);
       console.log(error);
     }
   };

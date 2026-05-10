@@ -1,15 +1,13 @@
-import axios from "axios";
+import axios, { type AxiosRequestConfig } from "axios";
 
-const instance = axios.create({
+const axiosInstance = axios.create({
   baseURL: import.meta.env.VITE_SERVER_API_URL || "http://localhost:3000/api",
 });
 
-//Tranform mọi resquest trước khi gọi lên server
-//lấy token trong localStorage
-//đính vào header
-instance.interceptors.request.use(
+// Transform mọi request trước khi gọi lên server
+// Lấy token trong localStorage và đính vào header
+axiosInstance.interceptors.request.use(
   (config) => {
-    // const token = localStorage.getItem("token");
     const token = localStorage.getItem("token");
     config.headers.Authorization = token ? token : "";
     return config;
@@ -19,10 +17,9 @@ instance.interceptors.request.use(
   }
 );
 
-//TRANFORM mọi respone trả về => bỏ qua lớp data của axios
-//+ fetch res => chính là kết quả trả về
-//+ axios res.data => chính là kết quả trả về
-instance.interceptors.response.use(
+// Transform mọi response trả về => unwrap res.data
+// Nên kiểu thực tế trả về là dữ liệu từ server, không phải AxiosResponse
+axiosInstance.interceptors.response.use(
   (res) => {
     if (res && res.data) {
       return res.data;
@@ -34,4 +31,10 @@ instance.interceptors.response.use(
   }
 );
 
-export default instance;
+// Cast về Promise<any> vì interceptor đã unwrap res.data
+// TypeScript không tự suy ra được điều này từ AxiosInstance
+function request(config: AxiosRequestConfig): Promise<any> {
+  return axiosInstance(config) as unknown as Promise<any>;
+}
+
+export default request;

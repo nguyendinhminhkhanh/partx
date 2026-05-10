@@ -13,32 +13,180 @@ import { Label } from "../ui/label";
 import { Input } from "../ui/input";
 import { X, Plus } from "lucide-react";
 import { Spinner } from "../ui/spinner";
-interface Props {
-  children: React.ReactNode;
-  form: any;
+import { useEffect, useRef, useState } from "react";
+import { useNavigate } from "react-router";
+import request from "../../api/request";
+import { useFieldArray, useForm } from "react-hook-form";
+import { toast } from "sonner";
+interface InvoiceItem {
+  productCode?: string;
+  productName: string;
+  guarantee?: number;
+  quantity?: number;
+  price?: number;
+  total?: number;
 }
 
-export default function CreateInvoiceDialog({ children, form }: Props) {
-  const {
-    handleSubmit,
-    onSubmit,
-    register,
-    fields,
-    append,
-    remove,
-    setValue,
-    keyCompanyName,
-    setKeyCompanyName,
-    handleCompanyChange,
-    resutlFindCom,
-    fileInputRef,
-    preview,
-    handleFileChange,
-    handleRemoveImage,
-    formatVND,
-    totalAmount,
-    isSubmitting,
-  } = form;
+interface Invoice {
+  _id: string;
+  imageUrl: string;
+  items?: InvoiceItem[];
+  totalAmount: number;
+  createdBy?: {
+    _id: string;
+    address: string;
+    companyName: string;
+  };
+  createdAt: string;
+}
+export default function CreateInvoiceDialog({ children }: Props) {
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const [preview, setPreview] = useState(null);
+  const [imageFile, setImageFile] = useState<File | null>(null);
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setImageFile(file);
+    setPreview(URL.createObjectURL(file));
+  };
+
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const navigate = useNavigate();
+
+  const { register, handleSubmit, reset, setValue, watch, control } =
+    useForm<Invoice>();
+  const { fields, append, remove } = useFieldArray({
+    control,
+    name: "items",
+  });
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // const imageFile = watch("imageUrl");
+
+  // const previewImage = useMemo(() => {
+  //   if (!imageFile || imageFile.length === 0) return null;
+  //   return URL.createObjectURL(imageFile[0]);
+  // }, [imageFile]);
+
+  const quantity = watch("quantity");
+  const price = watch("price");
+  const totalAmount = (Number(quantity) || 0) * (Number(price) || 0);
+
+  const formatVND = (value: number) => {
+    return value?.toLocaleString("vi-VN", {
+      style: "currency",
+      currency: "VND",
+    });
+  };
+
+  const [keyCompanyName, setKeyCompanyName] = useState("");
+  const [resutlFindCom, setResultFindCom] = useState<any[]>([]);
+
+  const handleCompanyChange = async (
+    e: React.ChangeEvent<HTMLInputElement>,
+  ) => {
+    const value = e.target.value;
+    setKeyCompanyName(value);
+    if (!value.trim()) {
+      setResultFindCom([]);
+      return;
+    }
+  };
+
+  useEffect(() => {
+    if (!keyCompanyName.trim()) return;
+    // clear debounce cũ
+    if (debounceRef.current) {
+      clearTimeout(debounceRef.current);
+    }
+
+    debounceRef.current = setTimeout(async () => {
+      try {
+        const res = await request({
+          method: "GET",
+          url: `/saleunit/${keyCompanyName}`,
+        });
+
+        console.log("company:", res.data);
+        setResultFindCom(res.data);
+      } catch (err) {
+        console.error(err);
+      }
+    }, 200);
+
+    // cleanup khi unmount / keyword đổi
+    return () => {
+      if (debounceRef.current) {
+        clearTimeout(debounceRef.current);
+      }
+    };
+  }, [keyCompanyName]);
+
+  //button clear imagr
+  const handleRemoveImage = () => {
+    setPreview(null);
+    setImageFile(null);
+
+    // reset input file
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
+  };
+
+  // upload image function cloudinary
+  const uploadImage = async () => {
+    const formData = new FormData();
+    if (imageFile) {
+      formData.append("file", imageFile);
+      try {
+        const res = await request({
+          method: "POST",
+          url: "/upload",
+          data: formData,
+        });
+        return res.url;
+      } catch (error) {
+        console.log(error);
+      }
+      // console.log("Image name:", imageFile.name);
+      // console.log("Image size:", imageFile.size);
+      // console.log("Image type:", imageFile.type);
+    }
+  };
+
+  const onSubmit = async (data: Invoice) => {
+    try {
+      setIsSubmitting(true);
+      const { items, createdBy } = data;
+      const imageUrl = await uploadImage();
+      console.log({ imageUrl, createdBy, items });
+      const res = await request({
+        method: "POST",
+        url: "/invoice/create",
+        data: {
+          imageUrl,
+          createdBy,
+          items,
+        },
+      });
+      if (res.success) {
+        reset();
+        setKeyCompanyName("");
+        setResultFindCom([]);
+        toast.success("Tạo hóa đơn thành công");
+        setTimeout(() => {
+          navigate(0);
+        }, 500);
+      }
+    } catch (error) {
+      console.log(error);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   return (
     <Dialog>
       <DialogTrigger asChild>{children}</DialogTrigger>

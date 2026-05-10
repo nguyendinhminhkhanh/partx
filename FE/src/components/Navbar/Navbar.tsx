@@ -37,6 +37,8 @@ import {
   AccordionTrigger,
 } from "../../components/ui/accordion";
 
+const DEFAULT_AVATAR = "https://i.pravatar.cc/150?img=12";
+
 const NAV_ITEMS = [
   { label: "Trang chủ", to: "/" },
   {
@@ -129,7 +131,10 @@ export default function Navbar() {
                   className="flex items-center gap-3 px-3 py-2 rounded-xl hover:bg-muted transition"
                 >
                   <Avatar className="w-9 h-9 ring-2 ring-border">
-                    <AvatarImage src="https://i.pravatar.cc/150?img=12" />
+                    <AvatarImage
+                      src={user?.avatar || DEFAULT_AVATAR}
+                      className="object-contain"
+                    />
                     <AvatarFallback className="bg-primary text-white text-sm">
                       {user?.fullName?.charAt(0)}
                     </AvatarFallback>
@@ -183,8 +188,9 @@ export default function Navbar() {
               <Link to="/profile">
                 <Avatar className="w-16 h-16 ring-2 ring-primary ring-offset-2">
                   <AvatarImage
-                    src="https://i.pravatar.cc/150?img=12"
-                    alt="Demo User"
+                    src={user?.avatar || DEFAULT_AVATAR}
+                    alt={user?.fullName}
+                    className="object-contain"
                   />
                   <AvatarFallback>{user?.fullName?.charAt(0)}</AvatarFallback>
                 </Avatar>

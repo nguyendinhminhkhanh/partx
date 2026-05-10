@@ -7,6 +7,8 @@ export type User = {
   email: string;
   phone: number;
   createdAt: string;
+  role?: string;
+  avatar?: string;
 };
 export type AuthContextType = {
   user: User | null;

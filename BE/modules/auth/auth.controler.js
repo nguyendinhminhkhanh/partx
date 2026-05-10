@@ -3,6 +3,8 @@ const bcrypt = require("bcryptjs");
 const tokenProvider = require("../../common/tokenProvider");
 const HttpError = require("../../common/httpError");
 
+const DEFAULT_AVATAR = "https://i.pravatar.cc/150?img=12";
+
 // [POST] /api/auth/login
 const login = async (req, res) => {
   const { username, password } = req.body;
@@ -32,6 +34,7 @@ const login = async (req, res) => {
       email: existingUser.email,
       phone: existingUser.phone,
       role: existingUser.role,
+      avatar: existingUser.avatar || DEFAULT_AVATAR,
       createdAt: existingUser.createdAt,
       token: token,
     },
@@ -63,6 +66,7 @@ const register = async (req, res) => {
     fullName,
     email,
     phone,
+    avatar: DEFAULT_AVATAR,
   });
 
   const token = tokenProvider.sign(newUser._id);
@@ -77,6 +81,7 @@ const register = async (req, res) => {
       phone: newUser.phone,
       createdAt: newUser.createdAt,
       role: newUser.role,
+      avatar: newUser.avatar,
       token: token,
     },
   });
@@ -94,9 +99,61 @@ const getUserInfor = async (req, res) => {
         email: user.email,
         phone: user.phone,
         role: user.role,
+        avatar: user.avatar || DEFAULT_AVATAR,
       }
     : null;
   res.send({ success: 1, data: userInfor });
 };
 
-module.exports = { login, register, getUserInfor };
+// [PUT] /api/auth/update
+const updateProfile = async (req, res) => {
+  const { user } = req;
+  const { fullName, email, phone, avatar } = req.body;
+
+  const updatedUser = await UserModel.findByIdAndUpdate(
+    user._id,
+    { fullName, email, phone, avatar },
+    { new: true, runValidators: true }
+  );
+
+  res.send({
+    success: 1,
+    data: {
+      _id: updatedUser._id,
+      username: updatedUser.username,
+      fullName: updatedUser.fullName,
+      email: updatedUser.email,
+      phone: updatedUser.phone,
+      role: updatedUser.role,
+      avatar: updatedUser.avatar || DEFAULT_AVATAR,
+      createdAt: updatedUser.createdAt,
+    },
+  });
+};
+
+// [PUT] /api/auth/change-password
+const changePassword = async (req, res) => {
+  const { user } = req;
+  const { currentPassword, newPassword } = req.body;
+
+  console.log("=== changePassword ===");
+  console.log("user._id:", user._id);
+  console.log("user.password từ DB:", user.password);
+  console.log("currentPassword nhập vào:", currentPassword);
+
+  const isPasswordValid = await bcrypt.compare(currentPassword, user.password);
+  console.log("bcrypt.compare result:", isPasswordValid);
+
+  if (!isPasswordValid) {
+    throw new HttpError("Mật khẩu hiện tại không đúng", 401);
+  }
+
+  const salt = await bcrypt.genSalt(10);
+  const hashPassword = await bcrypt.hash(newPassword, salt);
+
+  await UserModel.findByIdAndUpdate(user._id, { password: hashPassword });
+
+  res.send({ success: 1, message: "Đổi mật khẩu thành công" });
+};
+
+module.exports = { login, register, getUserInfor, updateProfile, changePassword };
