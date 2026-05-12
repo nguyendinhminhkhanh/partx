@@ -21,7 +21,7 @@ BE/
 │       └── validateInput.js  # Validate request body/query bằng Joi schema
 └── modules/
     ├── auth/                 # Đăng ký, đăng nhập, lấy thông tin, cập nhật hồ sơ, đổi mật khẩu
-    ├── invoice/              # CRUD hóa đơn bán hàng
+    ├── invoice/              # CRUD hóa đơn + thống kê + tìm kiếm/lọc
     ├── salesUnit/            # CRUD đơn vị bán hàng
     ├── upload/               # Upload/xóa ảnh trên Cloudinary
     └── comment/              # (Chưa triển khai)
@@ -42,6 +42,27 @@ Mỗi module trong `modules/` gồm 4 file theo chuẩn:
 
 **Auth header:** Token JWT gửi qua `Authorization: <token>` — không có prefix `Bearer`
 
+### API Invoice — các endpoint
+
+| Method | Path | Mô tả |
+|--------|------|-------|
+| POST | `/api/invoice/create` | Tạo hóa đơn |
+| GET | `/api/invoice/stats/overview` | Thống kê tổng quan (phải đặt trước `/:id`) |
+| GET | `/api/invoice` | Lấy danh sách, hỗ trợ query: `keyword`, `dateFrom`, `dateTo` |
+| GET | `/api/invoice/:id` | Lấy chi tiết |
+| PUT | `/api/invoice/:id` | Cập nhật |
+| DELETE | `/api/invoice/:id` | Xóa |
+
+### API SaleUnit — các endpoint
+
+| Method | Path | Mô tả |
+|--------|------|-------|
+| POST | `/api/saleunit/create` | Tạo đơn vị bán hàng |
+| GET | `/api/saleunit` | Lấy tất cả |
+| PUT | `/api/saleunit/:id` | Cập nhật |
+| DELETE | `/api/saleunit/:id` | Xóa |
+| GET | `/api/saleunit/:companyName` | Tìm theo tên (regex, không phân biệt hoa thường) |
+
 ---
 
 ## Frontend — `FE/`
@@ -57,22 +78,25 @@ FE/src/
 ├── hook/
 │   └── useAuth.tsx           # AuthContext + useAuth() hook — lấy thông tin user đang đăng nhập
 ├── lib/
-│   └── utils.ts              # Hàm tiện ích (cn() cho Tailwind class merging)
+│   ├── utils.ts              # Hàm tiện ích (cn() cho Tailwind class merging)
+│   └── exportInvoice.ts      # Hàm xuất hóa đơn: exportInvoiceCSV, exportInvoicesCSV, printInvoice
 ├── components/
 │   ├── ui/                   # shadcn/ui components (Button, Input, Dialog, Table, ...)
+│   │   ├── price-input.tsx   # Input nhập số tiền/số lượng với format VND (focus: số thuần, blur: format)
+│   │   └── tooltip.tsx       # Tooltip click-to-show, hỗ trợ mobile tap, có nút copy trên desktop
 │   ├── Layout/               # MainLayout wrapper
 │   ├── Navbar/               # Thanh điều hướng (desktop + mobile, hiển thị avatar từ AuthContext)
-│   ├── ActionMenu/           # Menu hành động (edit/delete)
-│   └── CreateInvoiceDialog/  # Dialog tạo hóa đơn
+│   ├── ActionMenu/           # Menu hành động (edit/delete/export) — prop onExport optional
+│   └── CreateInvoiceDialog/  # Dialog tạo hóa đơn (tự tạo SaleUnit mới nếu không tìm thấy)
 └── pages/
     ├── Login/                # Đăng nhập
     ├── Register/             # Đăng ký
-    ├── Home/                 # Trang chủ
+    ├── Home/                 # Trang chủ — biểu đồ thống kê (BarChart theo ngày, LineChart theo tháng)
     ├── Profile/              # Hồ sơ cá nhân (đổi avatar, cập nhật thông tin, đổi mật khẩu)
-    ├── InvoiceList/          # Danh sách hóa đơn
-    ├── CreateInvoice/        # Tạo hóa đơn
-    ├── SaleUnitList/         # Danh sách đơn vị bán hàng
-    ├── CreateSaleUnit/       # Tạo đơn vị bán hàng
+    ├── InvoiceList/          # Danh sách hóa đơn — tìm kiếm, lọc ngày, sửa, xóa, xuất
+    ├── CreateInvoice/        # (Cũ — không dùng nữa, thay bằng CreateInvoiceDialog)
+    ├── SaleUnitList/         # Danh sách đơn vị bán hàng — tìm kiếm, sửa, xóa
+    ├── CreateSaleUnit/       # (Cũ — không dùng nữa)
     └── RulePage/             # PrivatePage — bảo vệ route yêu cầu đăng nhập
 ```
 
@@ -86,3 +110,32 @@ FE/src/
 - **Thông báo** dùng `sonner` toast, không dùng `alert()`
 - **Avatar** luôn dùng `user?.avatar || DEFAULT_AVATAR` — hằng `DEFAULT_AVATAR = "https://i.pravatar.cc/150?img=12"` khai báo local trong từng file cần dùng
 - **`request.tsx`** trả về `Promise<any>` vì interceptor đã unwrap `res.data` — không cần `.data` khi dùng
+- **Input số tiền/số lượng** dùng component `PriceInput` từ `src/components/ui/price-input.tsx` kết hợp với `Controller` của React Hook Form
+- **Responsive** — không dùng 2 block `hidden md:block` / `md:hidden` riêng biệt; dùng chung header, tách Table (desktop) và Card (mobile) trong cùng một render
+- **Xuất dữ liệu** — dùng các hàm trong `src/lib/exportInvoice.ts`, không cần thư viện ngoài
+
+### Quy Tắc PriceInput
+
+```tsx
+// Dùng với Controller của React Hook Form
+<Controller
+  control={control}
+  name="price"
+  render={({ field }) => (
+    <PriceInput value={field.value} onChange={field.onChange} showCurrency />
+  )}
+/>
+```
+- `showCurrency`: hiện ký hiệu `₫` ở góc phải
+- Khi focus: hiển thị số thuần để dễ sửa
+- Khi blur: format lại với dấu phân cách hàng nghìn
+
+### Quy Tắc ActionMenu
+
+```tsx
+<ActionMenu
+  onEdit={() => handleEdit(item)}
+  onDelete={() => handleDelete(item._id)}
+  onExport={() => printInvoice(item)}  // optional — chỉ truyền khi cần
+/>
+```

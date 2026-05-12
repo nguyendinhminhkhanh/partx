@@ -19,11 +19,13 @@
 - **Routing**: React Router v7
 - **Styling**: Tailwind CSS v4
 - **UI Components**: Radix UI + shadcn/ui pattern (components trong `src/components/ui/`)
+  - `@radix-ui/react-tooltip` — đã cài, dùng cho `tooltip.tsx`
 - **HTTP Client**: Axios — instance cấu hình sẵn tại `src/api/request.tsx`
-- **Form**: React Hook Form
-- **Biểu đồ**: Recharts
+- **Form**: React Hook Form (dùng `Controller` cho input số tiền)
+- **Biểu đồ**: Recharts (`BarChart`, `LineChart` trong trang Home)
 - **Toast thông báo**: Sonner
 - **Biến môi trường**: `VITE_SERVER_API_URL` trong file `.env` của FE
+- **Xuất file**: Không dùng thư viện ngoài — CSV tự tạo Blob, PDF qua `window.print()`
 
 ## Các Lệnh Thường Dùng
 
@@ -53,3 +55,4 @@ npm run preview
 - BE chạy mặc định tại `http://localhost:3000`
 - FE gọi API qua `VITE_SERVER_API_URL`, mặc định fallback về `http://localhost:3000/api`
 - Token JWT được lưu trong `localStorage` với key `"token"` và gửi qua header `Authorization`
+- `navigator.clipboard` chỉ hoạt động trên HTTPS hoặc `localhost` — khi truy cập qua IP nội bộ (HTTP) cần dùng fallback `document.execCommand("copy")`
