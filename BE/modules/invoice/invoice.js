@@ -3,15 +3,15 @@ const mongoose = require("mongoose");
 //hóa đơn bán hàng
 const InvoiceSchema = mongoose.Schema(
   {
-    imageUrl: { type: String, required: true },
+    imageUrl: { type: String, required: false },
     items: [
       {
         productCode: { type: String },
         productName: { type: String, required: true },
-        guarantee: { type: Number, required: true },
-        quantity: { type: Number, required: true },
-        price: { type: Number, required: true },
-        total: { type: Number, required: true },
+        guarantee: { type: Number, default: 0 },
+        quantity: { type: Number, required: true, default: 0 },
+        price: { type: Number, required: true, default: 0 },
+        total: { type: Number, required: true, default: 0 },
       },
     ],
     totalAmount: { type: Number, required: true },

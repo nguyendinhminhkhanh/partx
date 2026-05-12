@@ -16,8 +16,9 @@ import { Spinner } from "../ui/spinner";
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router";
 import request from "../../api/request";
-import { useFieldArray, useForm } from "react-hook-form";
+import { Controller, useFieldArray, useForm } from "react-hook-form";
 import { toast } from "sonner";
+import { PriceInput } from "../ui/price-input";
 interface InvoiceItem {
   productCode?: string;
   productName: string;
@@ -70,9 +71,10 @@ export default function CreateInvoiceDialog({ children }: Props) {
   //   return URL.createObjectURL(imageFile[0]);
   // }, [imageFile]);
 
-  const quantity = watch("quantity");
-  const price = watch("price");
-  const totalAmount = (Number(quantity) || 0) * (Number(price) || 0);
+  const watchedItems = watch("items");
+  const totalAmount = (watchedItems ?? []).reduce((sum, item) => {
+    return sum + (Number(item?.quantity) || 0) * (Number(item?.price) || 0);
+  }, 0);
 
   const formatVND = (value: number) => {
     return value?.toLocaleString("vi-VN", {
@@ -83,14 +85,19 @@ export default function CreateInvoiceDialog({ children }: Props) {
 
   const [keyCompanyName, setKeyCompanyName] = useState("");
   const [resutlFindCom, setResultFindCom] = useState<any[]>([]);
+  // true khi người dùng gõ tên nhưng chưa chọn từ danh sách
+  const [isNewCompany, setIsNewCompany] = useState(false);
 
   const handleCompanyChange = async (
     e: React.ChangeEvent<HTMLInputElement>,
   ) => {
     const value = e.target.value;
     setKeyCompanyName(value);
+    // Người dùng đang gõ → chưa chọn từ danh sách → đánh dấu là công ty mới
+    setIsNewCompany(true);
     if (!value.trim()) {
       setResultFindCom([]);
+      setIsNewCompany(false);
       return;
     }
   };
@@ -159,9 +166,45 @@ export default function CreateInvoiceDialog({ children }: Props) {
   const onSubmit = async (data: Invoice) => {
     try {
       setIsSubmitting(true);
-      const { items, createdBy } = data;
+      const { items } = data;
+      let { createdBy } = data;
+
+      // Nếu người dùng gõ tên công ty mới (không chọn từ danh sách) → tạo SaleUnit trước
+      if (isNewCompany && keyCompanyName.trim()) {
+        try {
+          const newUnit = await request({
+            method: "POST",
+            url: "/saleunit/create",
+            data: { companyName: keyCompanyName.trim() },
+          });
+          createdBy = newUnit.data._id;
+          toast.info(`Đã tạo công ty "${keyCompanyName.trim()}"`);
+        } catch (err: any) {
+          // 409: công ty đã tồn tại → tìm và lấy _id
+          if (err?.response?.status === 409 || err?.status === 409) {
+            const found = await request({
+              method: "GET",
+              url: `/saleunit/${keyCompanyName.trim()}`,
+            });
+            if (found.data && found.data.length > 0) {
+              createdBy = found.data[0]._id;
+            } else {
+              toast.error("Không tìm thấy công ty, vui lòng thử lại");
+              return;
+            }
+          } else {
+            toast.error("Không thể tạo công ty, vui lòng thử lại");
+            return;
+          }
+        }
+      }
+
+      if (!createdBy) {
+        toast.error("Vui lòng chọn hoặc nhập tên công ty");
+        return;
+      }
+
       const imageUrl = await uploadImage();
-      console.log({ imageUrl, createdBy, items });
       const res = await request({
         method: "POST",
         url: "/invoice/create",
@@ -175,6 +218,7 @@ export default function CreateInvoiceDialog({ children }: Props) {
         reset();
         setKeyCompanyName("");
         setResultFindCom([]);
+        setIsNewCompany(false);
         toast.success("Tạo hóa đơn thành công");
         setTimeout(() => {
           navigate(0);
@@ -182,6 +226,7 @@ export default function CreateInvoiceDialog({ children }: Props) {
       }
     } catch (error) {
       console.log(error);
+      toast.error("Có lỗi xảy ra, vui lòng thử lại");
     } finally {
       setIsSubmitting(false);
     }
@@ -198,11 +243,18 @@ export default function CreateInvoiceDialog({ children }: Props) {
         <form className="space-y-6" onSubmit={handleSubmit(onSubmit)}>
           <FieldGroup>
             <Command className="border rounded-md">
-              <Input
-                placeholder="Tìm công ty..."
-                value={keyCompanyName}
-                onChange={handleCompanyChange}
-              />
+              <div className="relative">
+                <Input
+                  placeholder="Tìm công ty..."
+                  value={keyCompanyName}
+                  onChange={handleCompanyChange}
+                />
+                {isNewCompany && keyCompanyName.trim() && (
+                  <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs bg-amber-100 text-amber-700 border border-amber-300 rounded px-1.5 py-0.5">
+                    Tạo mới
+                  </span>
+                )}
+              </div>
               <CommandList>
                 {resutlFindCom.length === 0 && (
                   <p className="px-3 py-2 text-sm text-muted-foreground">
@@ -218,6 +270,7 @@ export default function CreateInvoiceDialog({ children }: Props) {
                         shouldValidate: true,
                       });
                       setKeyCompanyName(c.companyName);
+                      setIsNewCompany(false); // đã chọn từ danh sách → không tạo mới
                     }}
                   >
                     <div className="flex flex-col">
@@ -293,31 +346,60 @@ export default function CreateInvoiceDialog({ children }: Props) {
                     )}
                   </div>
 
-                  <Input
-                    placeholder="Tên sản phẩm"
-                    {...register(`items.${index}.productName`, {
-                      required: true,
-                    })}
-                  />
+                  <div className="space-y-1">
+                    <Label htmlFor={`items.${index}.productName`}>Tên sản phẩm</Label>
+                    <Input
+                      id={`items.${index}.productName`}
+                      placeholder="Tên sản phẩm"
+                      {...register(`items.${index}.productName`, {
+                        required: true,
+                      })}
+                    />
+                  </div>
 
-                  <Input
-                    type="number"
-                    placeholder="Bảo hành (tháng)"
-                    {...register(`items.${index}.guarantee`)}
-                  />
+                  <div className="space-y-1">
+                    <Label htmlFor={`items.${index}.guarantee`}>Bảo hành (tháng)</Label>
+                    <Input
+                      id={`items.${index}.guarantee`}
+                      type="number"
+                      placeholder="Số tháng bảo hành"
+                      {...register(`items.${index}.guarantee`)}
+                    />
+                  </div>
 
                   <div className="grid grid-cols-2 gap-4">
-                    <Input
-                      type="number"
-                      placeholder="Số lượng"
-                      {...register(`items.${index}.quantity`)}
-                    />
+                    <div className="space-y-1">
+                      <Label htmlFor={`items.${index}.quantity`}>Số lượng</Label>
+                      <Controller
+                        control={control}
+                        name={`items.${index}.quantity`}
+                        render={({ field }) => (
+                          <PriceInput
+                            id={`items.${index}.quantity`}
+                            value={field.value}
+                            onChange={field.onChange}
+                            placeholder="0"
+                          />
+                        )}
+                      />
+                    </div>
 
-                    <Input
-                      type="number"
-                      placeholder="Giá"
-                      {...register(`items.${index}.price`)}
-                    />
+                    <div className="space-y-1">
+                      <Label htmlFor={`items.${index}.price`}>Đơn giá</Label>
+                      <Controller
+                        control={control}
+                        name={`items.${index}.price`}
+                        render={({ field }) => (
+                          <PriceInput
+                            id={`items.${index}.price`}
+                            value={field.value}
+                            onChange={field.onChange}
+                            placeholder="0"
+                            showCurrency
+                          />
+                        )}
+                      />
+                    </div>
                   </div>
                 </div>
               ))}

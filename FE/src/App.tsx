@@ -79,7 +79,7 @@ function App() {
             element={<SaleUnitList></SaleUnitList>}
           ></Route>
 
-          <Route path="/pagetest" element={<PageTest></PageTest>}></Route>
+          {/* <Route path="/pagetest" element={<PageTest></PageTest>}></Route> */}
         </Route>
       </Routes>
     </AuthContext.Provider>

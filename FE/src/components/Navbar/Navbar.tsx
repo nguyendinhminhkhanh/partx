@@ -48,7 +48,7 @@ const NAV_ITEMS = [
       { label: "Đơn vị bán hàng", to: "/saleunitlist" },
     ],
   },
-  { label: "PageTEst", to: "/pagetest" },
+  // { label: "PageTEst", to: "/pagetest" },
 ];
 
 export default function Navbar() {

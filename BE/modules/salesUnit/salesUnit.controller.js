@@ -66,6 +66,24 @@ const getSalesUnitByCom = async (req, res) => {
   res.send({ success: 1, data: salesUnit });
 };
 
+//[PUT] /api/saleunit/:id
+const updateSalesUnit = async (req, res) => {
+  const { id } = req.params;
+  const { companyName, address, taxCode, email, website, phone } = req.body;
+  const salesUnit = await SalesUnitModel.findById(id);
+  if (!salesUnit) {
+    return res
+      .status(404)
+      .send({ success: 0, message: "Không tìm thấy đơn vị bán hàng" });
+  }
+  const updated = await SalesUnitModel.findByIdAndUpdate(
+    id,
+    { companyName, address, taxCode, email, website, phone },
+    { new: true },
+  );
+  res.send({ success: 1, data: updated });
+};
+
 //[DELETE] /api/saleUnit/:id
 const deleteSaleUnit = async (req, res) => {
   console.log("delete saleUnit");
@@ -82,5 +100,6 @@ module.exports = {
   getAllSalesUnit,
   getSalesUnitById,
   getSalesUnitByCom,
+  updateSalesUnit,
   deleteSaleUnit,
 };
