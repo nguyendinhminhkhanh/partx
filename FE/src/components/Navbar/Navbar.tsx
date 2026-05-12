@@ -45,10 +45,10 @@ const NAV_ITEMS = [
     label: "Hóa đơn",
     children: [
       { label: "Hóa đơn nhập", to: "/invoicelist" },
+      { label: "Hóa đơn xuất", to: "/saleinvoicelist" },
       { label: "Đơn vị bán hàng", to: "/saleunitlist" },
     ],
   },
-  // { label: "PageTEst", to: "/pagetest" },
 ];
 
 export default function Navbar() {

@@ -16,7 +16,7 @@ import {
   YAxis,
 } from "recharts";
 import request from "../../api/request";
-import { FileText, TrendingUp, Calendar, DollarSign } from "lucide-react";
+import { FileText, TrendingUp, Calendar, DollarSign, ShoppingCart, ArrowUpRight, ArrowDownLeft } from "lucide-react";
 import {
   Card,
   CardContent,
@@ -36,21 +36,28 @@ interface Stats {
   monthly: { label: string; count: number; total: number }[];
 }
 
-const dailyChartConfig = {
-  count: { label: "Số hóa đơn", color: "#16a34a" },
-} satisfies ChartConfig;
+// Dữ liệu kết hợp nhập + xuất cho biểu đồ so sánh
+interface CombinedDay {
+  label: string;
+  nhap: number;
+  xuat: number;
+}
 
-const monthlyChartConfig = {
-  total: { label: "Tổng tiền (₫)", color: "#2563eb" },
+interface CombinedMonth {
+  label: string;
+  nhap: number;
+  xuat: number;
+}
+
+const combinedMonthlyConfig = {
+  nhap: { label: "Nhập", color: "#2563eb" },
+  xuat: { label: "Xuất", color: "#16a34a" },
 } satisfies ChartConfig;
 
 function formatVND(value: number) {
-  if (value >= 1_000_000_000)
-    return `${(value / 1_000_000_000).toFixed(1)}T`;
-  if (value >= 1_000_000)
-    return `${(value / 1_000_000).toFixed(1)}Tr`;
-  if (value >= 1_000)
-    return `${(value / 1_000).toFixed(0)}N`;
+  if (value >= 1_000_000_000) return `${(value / 1_000_000_000).toFixed(1)}B`;
+  if (value >= 1_000_000) return `${(value / 1_000_000).toFixed(1)}M`;
+  if (value >= 1_000) return `${(value / 1_000).toFixed(0)}K`;
   return String(value);
 }
 
@@ -59,24 +66,26 @@ function formatVNDFull(value: number) {
 }
 
 export default function Home() {
-  const [stats, setStats] = useState<Stats | null>(null);
+  const [importStats, setImportStats] = useState<Stats | null>(null);
+  const [exportStats, setExportStats] = useState<Stats | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const fetch = async () => {
+    const fetchAll = async () => {
       try {
-        const res = await request({
-          method: "GET",
-          url: "/invoice/stats/overview",
-        });
-        if (res.success) setStats(res.data);
+        const [importRes, exportRes] = await Promise.all([
+          request({ method: "GET", url: "/invoice/stats/overview" }),
+          request({ method: "GET", url: "/saleinvoice/stats/overview" }),
+        ]);
+        if (importRes.success) setImportStats(importRes.data);
+        if (exportRes.success) setExportStats(exportRes.data);
       } catch (err) {
         console.error("Lỗi lấy thống kê:", err);
       } finally {
         setLoading(false);
       }
     };
-    fetch();
+    fetchAll();
   }, []);
 
   if (loading) {
@@ -89,202 +98,285 @@ export default function Home() {
     );
   }
 
-  const summary = stats?.summary;
+  const imp = importStats?.summary;
+  const exp = exportStats?.summary;
+
+  // Kết hợp dữ liệu tháng để so sánh
+  const combinedMonthly: CombinedMonth[] = (importStats?.monthly ?? []).map((m, i) => ({
+    label: m.label,
+    nhap: m.total,
+    xuat: exportStats?.monthly[i]?.total ?? 0,
+  }));
+
+  // Kết hợp dữ liệu ngày để so sánh
+  const combinedDaily: CombinedDay[] = (importStats?.daily ?? []).map((d, i) => ({
+    label: d.label,
+    nhap: d.count,
+    xuat: exportStats?.daily[i]?.count ?? 0,
+  }));
 
   return (
     <MainLayout>
       <div className="p-4 space-y-6">
         <h1 className="text-xl font-bold">Tổng quan</h1>
 
-        {/* ── 4 thẻ tóm tắt ── */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-          <Card>
-            <CardContent className="pt-4 pb-4">
-              <div className="flex items-center gap-3">
-                <div className="p-2 rounded-lg bg-green-100 text-green-600">
-                  <FileText className="w-4 h-4" />
-                </div>
-                <div>
-                  <p className="text-xs text-muted-foreground">Tổng hóa đơn</p>
-                  <p className="text-xl font-bold">{summary?.totalInvoices ?? 0}</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+        {/* ── Thẻ tóm tắt: 2 cột nhập / xuất ── */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {/* Nhập */}
+          <div className="space-y-3">
+            <div className="flex items-center gap-2">
+              <ArrowDownLeft className="w-4 h-4 text-blue-600" />
+              <h2 className="font-semibold text-sm text-blue-600">Hóa đơn nhập</h2>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <Card>
+                <CardContent className="pt-4 pb-4">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 rounded-lg bg-blue-100 text-blue-600">
+                      <FileText className="w-4 h-4" />
+                    </div>
+                    <div>
+                      <p className="text-xs text-muted-foreground">Tổng HĐ</p>
+                      <p className="text-xl font-bold">{imp?.totalInvoices ?? 0}</p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardContent className="pt-4 pb-4">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 rounded-lg bg-blue-100 text-blue-600">
+                      <DollarSign className="w-4 h-4" />
+                    </div>
+                    <div>
+                      <p className="text-xs text-muted-foreground">Tổng giá trị</p>
+                      <p className="text-xl font-bold">{formatVND(imp?.totalAmount ?? 0)}</p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardContent className="pt-4 pb-4">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 rounded-lg bg-blue-100 text-blue-600">
+                      <Calendar className="w-4 h-4" />
+                    </div>
+                    <div>
+                      <p className="text-xs text-muted-foreground">Tháng này</p>
+                      <p className="text-xl font-bold">{imp?.thisMonthCount ?? 0} HĐ</p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardContent className="pt-4 pb-4">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 rounded-lg bg-blue-100 text-blue-600">
+                      <TrendingUp className="w-4 h-4" />
+                    </div>
+                    <div>
+                      <p className="text-xs text-muted-foreground">Giá trị tháng</p>
+                      <p className="text-xl font-bold">{formatVND(imp?.thisMonthAmount ?? 0)}</p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          </div>
 
-          <Card>
-            <CardContent className="pt-4 pb-4">
-              <div className="flex items-center gap-3">
-                <div className="p-2 rounded-lg bg-blue-100 text-blue-600">
-                  <DollarSign className="w-4 h-4" />
-                </div>
-                <div>
-                  <p className="text-xs text-muted-foreground">Tổng giá trị</p>
-                  <p className="text-xl font-bold">{formatVND(summary?.totalAmount ?? 0)}</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardContent className="pt-4 pb-4">
-              <div className="flex items-center gap-3">
-                <div className="p-2 rounded-lg bg-amber-100 text-amber-600">
-                  <Calendar className="w-4 h-4" />
-                </div>
-                <div>
-                  <p className="text-xs text-muted-foreground">Tháng này</p>
-                  <p className="text-xl font-bold">{summary?.thisMonthCount ?? 0} Hoá đơn</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardContent className="pt-4 pb-4">
-              <div className="flex items-center gap-3">
-                <div className="p-2 rounded-lg bg-purple-100 text-purple-600">
-                  <TrendingUp className="w-4 h-4" />
-                </div>
-                <div>
-                  <p className="text-xs text-muted-foreground">Giá trị tháng này</p>
-                  <p className="text-xl font-bold">{formatVND(summary?.thisMonthAmount ?? 0)}</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+          {/* Xuất */}
+          <div className="space-y-3">
+            <div className="flex items-center gap-2">
+              <ArrowUpRight className="w-4 h-4 text-green-600" />
+              <h2 className="font-semibold text-sm text-green-600">Hóa đơn xuất</h2>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <Card>
+                <CardContent className="pt-4 pb-4">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 rounded-lg bg-green-100 text-green-600">
+                      <ShoppingCart className="w-4 h-4" />
+                    </div>
+                    <div>
+                      <p className="text-xs text-muted-foreground">Tổng HĐ</p>
+                      <p className="text-xl font-bold">{exp?.totalInvoices ?? 0}</p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardContent className="pt-4 pb-4">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 rounded-lg bg-green-100 text-green-600">
+                      <DollarSign className="w-4 h-4" />
+                    </div>
+                    <div>
+                      <p className="text-xs text-muted-foreground">Tổng giá trị</p>
+                      <p className="text-xl font-bold">{formatVND(exp?.totalAmount ?? 0)}</p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardContent className="pt-4 pb-4">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 rounded-lg bg-green-100 text-green-600">
+                      <Calendar className="w-4 h-4" />
+                    </div>
+                    <div>
+                      <p className="text-xs text-muted-foreground">Tháng này</p>
+                      <p className="text-xl font-bold">{exp?.thisMonthCount ?? 0} HĐ</p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardContent className="pt-4 pb-4">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 rounded-lg bg-green-100 text-green-600">
+                      <TrendingUp className="w-4 h-4" />
+                    </div>
+                    <div>
+                      <p className="text-xs text-muted-foreground">Giá trị tháng</p>
+                      <p className="text-xl font-bold">{formatVND(exp?.thisMonthAmount ?? 0)}</p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          </div>
         </div>
 
-        {/* ── Biểu đồ số hóa đơn theo ngày (30 ngày) ── */}
+        {/* ── Biểu đồ so sánh số HĐ theo ngày ── */}
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-base">Số hóa đơn theo ngày</CardTitle>
-            <CardDescription>30 ngày gần nhất</CardDescription>
+            <CardDescription>30 ngày gần nhất — nhập (xanh dương) vs xuất (xanh lá)</CardDescription>
           </CardHeader>
           <CardContent>
-            <ChartContainer config={dailyChartConfig} className="h-52 w-full">
-              <BarChart
-                data={stats?.daily ?? []}
-                margin={{ top: 4, right: 4, left: -20, bottom: 0 }}
-              >
+            <ChartContainer config={combinedMonthlyConfig} className="h-52 w-full">
+              <BarChart data={combinedDaily} margin={{ top: 4, right: 4, left: -20, bottom: 0 }}>
                 <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                <XAxis
-                  dataKey="label"
-                  tick={{ fontSize: 10 }}
-                  interval={4}
-                  tickLine={false}
-                  axisLine={false}
-                />
-                <YAxis
-                  allowDecimals={false}
-                  tick={{ fontSize: 10 }}
-                  tickLine={false}
-                  axisLine={false}
-                />
+                <XAxis dataKey="label" tick={{ fontSize: 10 }} interval={4} tickLine={false} axisLine={false} />
+                <YAxis allowDecimals={false} tick={{ fontSize: 10 }} tickLine={false} axisLine={false} />
                 <ChartTooltip
                   content={
                     <ChartTooltipContent
-                      formatter={(value) => [`${value} hóa đơn`, "Số lượng"]}
+                      formatter={(value, name) => [
+                        `${value} hóa đơn`,
+                        name === "nhap" ? "Nhập" : "Xuất",
+                      ]}
                     />
                   }
                 />
-                <Bar
-                  dataKey="count"
-                  fill="var(--color-count)"
-                  radius={[4, 4, 0, 0]}
-                  maxBarSize={32}
-                />
+                <Bar dataKey="nhap" fill="var(--color-nhap)" radius={[3, 3, 0, 0]} maxBarSize={16} />
+                <Bar dataKey="xuat" fill="var(--color-xuat)" radius={[3, 3, 0, 0]} maxBarSize={16} />
               </BarChart>
             </ChartContainer>
           </CardContent>
         </Card>
 
-        {/* ── Biểu đồ tổng tiền theo tháng (12 tháng) ── */}
+        {/* ── Biểu đồ so sánh tổng tiền theo tháng ── */}
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-base">Tổng giá trị theo tháng</CardTitle>
-            <CardDescription>12 tháng gần nhất</CardDescription>
+            <CardDescription>12 tháng gần nhất — nhập (xanh dương) vs xuất (xanh lá)</CardDescription>
           </CardHeader>
           <CardContent>
-            <ChartContainer config={monthlyChartConfig} className="h-52 w-full">
-              <LineChart
-                data={stats?.monthly ?? []}
-                margin={{ top: 4, right: 4, left: -10, bottom: 0 }}
-              >
+            <ChartContainer config={combinedMonthlyConfig} className="h-52 w-full">
+              <LineChart data={combinedMonthly} margin={{ top: 4, right: 4, left: -10, bottom: 0 }}>
                 <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                <XAxis
-                  dataKey="label"
-                  tick={{ fontSize: 10 }}
-                  tickLine={false}
-                  axisLine={false}
-                />
-                <YAxis
-                  tickFormatter={formatVND}
-                  tick={{ fontSize: 10 }}
-                  tickLine={false}
-                  axisLine={false}
-                />
+                <XAxis dataKey="label" tick={{ fontSize: 10 }} tickLine={false} axisLine={false} />
+                <YAxis tickFormatter={formatVND} tick={{ fontSize: 10 }} tickLine={false} axisLine={false} />
                 <ChartTooltip
                   content={
                     <ChartTooltipContent
-                      formatter={(value) => [
+                      formatter={(value, name) => [
                         formatVNDFull(Number(value)),
-                        "Tổng tiền",
+                        name === "nhap" ? "Nhập" : "Xuất",
                       ]}
                     />
                   }
                 />
-                <Line
-                  type="monotone"
-                  dataKey="total"
-                  stroke="var(--color-total)"
-                  strokeWidth={2}
-                  dot={{ r: 3, fill: "var(--color-total)" }}
-                  activeDot={{ r: 5 }}
-                />
+                <Line type="monotone" dataKey="nhap" stroke="var(--color-nhap)" strokeWidth={2}
+                  dot={{ r: 3, fill: "var(--color-nhap)" }} activeDot={{ r: 5 }} />
+                <Line type="monotone" dataKey="xuat" stroke="var(--color-xuat)" strokeWidth={2}
+                  dot={{ r: 3, fill: "var(--color-xuat)" }} activeDot={{ r: 5 }} />
               </LineChart>
             </ChartContainer>
           </CardContent>
         </Card>
 
-        {/* ── Bảng top 5 ngày gần nhất có hóa đơn ── */}
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-base">Hoạt động gần đây</CardTitle>
-            <CardDescription>Các ngày có hóa đơn trong 30 ngày qua</CardDescription>
-          </CardHeader>
-          <CardContent>
-            {(stats?.daily.filter((d) => d.count > 0).length ?? 0) === 0 ? (
-              <p className="text-sm text-muted-foreground text-center py-4">
-                Chưa có hóa đơn nào trong 30 ngày qua
-              </p>
-            ) : (
-              <div className="space-y-2">
-                {stats?.daily
-                  .filter((d) => d.count > 0)
-                  .slice(-5)
-                  .reverse()
-                  .map((d) => (
-                    <div
-                      key={d.date}
-                      className="flex items-center justify-between text-sm py-1.5 border-b last:border-0"
-                    >
-                      <div className="flex items-center gap-2">
-                        <span className="w-2 h-2 rounded-full bg-green-500 shrink-0" />
-                        <span className="text-muted-foreground">{d.date}</span>
+        {/* ── Hoạt động gần đây: 2 cột ── */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {/* Nhập */}
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm flex items-center gap-1.5">
+                <ArrowDownLeft className="w-4 h-4 text-blue-600" /> Nhập gần đây
+              </CardTitle>
+              <CardDescription>Các ngày có HĐ nhập trong 30 ngày qua</CardDescription>
+            </CardHeader>
+            <CardContent>
+              {(importStats?.daily.filter((d) => d.count > 0).length ?? 0) === 0 ? (
+                <p className="text-sm text-muted-foreground text-center py-4">Chưa có hóa đơn nhập</p>
+              ) : (
+                <div className="space-y-2">
+                  {importStats?.daily
+                    .filter((d) => d.count > 0)
+                    .slice(-5)
+                    .reverse()
+                    .map((d) => (
+                      <div key={d.date} className="flex items-center justify-between text-sm py-1.5 border-b last:border-0">
+                        <div className="flex items-center gap-2">
+                          <span className="w-2 h-2 rounded-full bg-blue-500 shrink-0" />
+                          <span className="text-muted-foreground">{d.date}</span>
+                        </div>
+                        <div className="flex items-center gap-4">
+                          <span className="font-medium">{d.count} HĐ</span>
+                          <span className="text-blue-600 font-semibold">{formatVNDFull(d.total)}</span>
+                        </div>
                       </div>
-                      <div className="flex items-center gap-4">
-                        <span className="font-medium">{d.count} hóa đơn</span>
-                        <span className="text-green-600 font-semibold">
-                          {formatVNDFull(d.total)}
-                        </span>
+                    ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Xuất */}
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm flex items-center gap-1.5">
+                <ArrowUpRight className="w-4 h-4 text-green-600" /> Xuất gần đây
+              </CardTitle>
+              <CardDescription>Các ngày có HĐ xuất trong 30 ngày qua</CardDescription>
+            </CardHeader>
+            <CardContent>
+              {(exportStats?.daily.filter((d) => d.count > 0).length ?? 0) === 0 ? (
+                <p className="text-sm text-muted-foreground text-center py-4">Chưa có hóa đơn xuất</p>
+              ) : (
+                <div className="space-y-2">
+                  {exportStats?.daily
+                    .filter((d) => d.count > 0)
+                    .slice(-5)
+                    .reverse()
+                    .map((d) => (
+                      <div key={d.date} className="flex items-center justify-between text-sm py-1.5 border-b last:border-0">
+                        <div className="flex items-center gap-2">
+                          <span className="w-2 h-2 rounded-full bg-green-500 shrink-0" />
+                          <span className="text-muted-foreground">{d.date}</span>
+                        </div>
+                        <div className="flex items-center gap-4">
+                          <span className="font-medium">{d.count} HĐ</span>
+                          <span className="text-green-600 font-semibold">{formatVNDFull(d.total)}</span>
+                        </div>
                       </div>
-                    </div>
-                  ))}
-              </div>
-            )}
-          </CardContent>
-        </Card>
+                    ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </div>
       </div>
     </MainLayout>
   );

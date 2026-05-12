@@ -7,6 +7,7 @@ const AuthRouter = require("./modules/auth");
 const UploadRouter = require("./modules/upload");
 const SalesUnitRouter = require("./modules/salesUnit");
 const InvoiceRouter = require("./modules/invoice");
+const SaleInvoiceRouter = require("./modules/saleInvoice");
 const app = express();
 
 async function main() {
@@ -19,6 +20,7 @@ async function main() {
   app.use("/api/upload", UploadRouter);
   app.use("/api/saleunit", SalesUnitRouter);
   app.use("/api/invoice", InvoiceRouter);
+  app.use("/api/saleinvoice", SaleInvoiceRouter);
 
   app.use(errorHandler);
   app.listen(3000, () => {

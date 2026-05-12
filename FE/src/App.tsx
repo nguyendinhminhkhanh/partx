@@ -7,13 +7,13 @@ import Login from "./pages/Login";
 import Register from "./pages/Register";
 import InvoiceList from "./pages/InvoiceList";
 import Profile from "./pages/Profile";
-import PageTest from "./pages/PageTest";
 import { AuthContext } from "./hook/useAuth";
 import { useEffect, useState } from "react";
 import type { User } from "./hook/useAuth";
 import { PrivatePage } from "./pages/RulePage";
 import request from "./api/request";
 import SaleUnitList from "./pages/SaleUnitList";
+import SaleInvoiceList from "./pages/SaleInvoiceList";
 function App() {
   const [status, setStatus] = useState("idle");
   const [user, setUser] = useState<User | null>(null);
@@ -74,10 +74,8 @@ function App() {
             element={<CreateInvoice></CreateInvoice>}
           ></Route>
 
-          <Route
-            path="/saleunitlist"
-            element={<SaleUnitList></SaleUnitList>}
-          ></Route>
+          <Route path="/saleunitlist" element={<SaleUnitList />} />
+          <Route path="/saleinvoicelist" element={<SaleInvoiceList />} />
 
           {/* <Route path="/pagetest" element={<PageTest></PageTest>}></Route> */}
         </Route>
