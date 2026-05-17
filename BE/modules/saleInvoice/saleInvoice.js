@@ -22,7 +22,11 @@ const SaleInvoiceSchema = mongoose.Schema(
 
     totalAmount: { type: Number, required: true },
     imageUrl: { type: String },
-    note: { type: String },                         // Ghi chú (tuỳ chọn)
+    note: { type: String },
+    createdByUser: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+    },
   },
   {
     timestamps: true,

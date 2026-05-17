@@ -51,6 +51,12 @@ interface Invoice {
     address: string;
     companyName: string;
   };
+  createdByUser?: {
+    _id: string;
+    fullName: string;
+    username: string;
+    avatar?: string;
+  };
   createdAt: string;
 }
 
@@ -59,6 +65,7 @@ export default function InvoiceList() {
   const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null);
   const [openDetail, setOpenDetail] = useState(false);
   const [openEdit, setOpenEdit] = useState(false);
+  const [openImage, setOpenImage] = useState(false);
   const [editTarget, setEditTarget] = useState<Invoice | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [keyCompanyName, setKeyCompanyName] = useState("");
@@ -405,12 +412,14 @@ export default function InvoiceList() {
                 </DialogHeader>
 
                 {selectedInvoice.imageUrl && (
-                  <div className="mt-4 flex justify-center">
+                  <div className="mt-4 flex flex-col items-center gap-1">
                     <img
                       src={selectedInvoice.imageUrl}
                       alt="hóa đơn"
-                      className="max-h-48 md:max-h-64 w-auto object-contain rounded-lg border shadow-sm"
+                      onClick={() => setOpenImage(true)}
+                      className="max-h-48 md:max-h-64 w-auto object-contain rounded-lg border shadow-sm cursor-zoom-in hover:opacity-90 transition-opacity"
                     />
+                    <p className="text-xs text-muted-foreground">Nhấn để phóng to</p>
                   </div>
                 )}
 
@@ -423,6 +432,23 @@ export default function InvoiceList() {
                     <p className="text-muted-foreground text-xs">Đơn vị bán</p>
                     <p className="font-medium">{selectedInvoice.createdBy?.companyName}</p>
                   </div>
+
+                  {selectedInvoice.createdByUser && (
+                    <div className="flex items-center gap-2 py-1.5 px-3 rounded-lg bg-muted/40 border">
+                      <div className="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center text-xs font-bold text-primary shrink-0">
+                        {selectedInvoice.createdByUser.fullName?.charAt(0)}
+                      </div>
+                      <div className="min-w-0">
+                        <p className="text-xs text-muted-foreground">Người tạo</p>
+                        <p className="text-sm font-medium truncate">
+                          {selectedInvoice.createdByUser.fullName}
+                          <span className="text-muted-foreground font-normal ml-1">
+                            @{selectedInvoice.createdByUser.username}
+                          </span>
+                        </p>
+                      </div>
+                    </div>
+                  )}
 
                   <div>
                     <p className="font-semibold mb-2">Danh sách sản phẩm</p>
@@ -471,6 +497,22 @@ export default function InvoiceList() {
         </DialogContent>
       </Dialog>
       </TooltipProvider>
+
+      {/* ── Lightbox xem ảnh full size ── */}
+      {selectedInvoice?.imageUrl && (
+        <Dialog open={openImage} onOpenChange={setOpenImage}>
+          <DialogContent className="max-w-[95vw] max-h-[95vh] p-2 flex items-center justify-center bg-black/90 border-0">
+            <DialogTitle className="sr-only">Ảnh hóa đơn</DialogTitle>
+            <DialogDescription className="sr-only">Xem ảnh hóa đơn phóng to</DialogDescription>
+            <img
+              src={selectedInvoice.imageUrl}
+              alt="hóa đơn phóng to"
+              className="max-w-full max-h-[90vh] object-contain rounded-lg"
+              onClick={() => setOpenImage(false)}
+            />
+          </DialogContent>
+        </Dialog>
+      )}
     </MainLayout>
   );
 }

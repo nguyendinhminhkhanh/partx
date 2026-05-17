@@ -48,6 +48,7 @@ const createSaleInvoice = async (req, res) => {
       totalAmount,
       imageUrl,
       note: note?.trim() || undefined,
+      createdByUser: req.user._id,
     });
 
     res.send({ success: 1, data: newInvoice });
@@ -81,9 +82,9 @@ const getAllSaleInvoice = async (req, res) => {
       }
     }
 
-    const invoices = await SaleInvoiceModel.find(filter).sort({
-      createdAt: -1,
-    });
+    const invoices = await SaleInvoiceModel.find(filter)
+      .populate("createdByUser", "fullName username avatar")
+      .sort({ createdAt: -1 });
     res.send({ success: 1, data: invoices });
   } catch (error) {
     res
@@ -96,7 +97,8 @@ const getAllSaleInvoice = async (req, res) => {
 const getSaleInvoiceById = async (req, res) => {
   try {
     const { id } = req.params;
-    const invoice = await SaleInvoiceModel.findById(id);
+    const invoice = await SaleInvoiceModel.findById(id)
+      .populate("createdByUser", "fullName username avatar");
     if (!invoice) {
       return res
         .status(404)

@@ -158,10 +158,7 @@ export default function Navbar() {
                 <UserIcon />
                 <Link to="/profile">Profile</Link>
               </DropdownMenuItem>
-              <DropdownMenuItem>
-                <CreditCardIcon />
-                Billing
-              </DropdownMenuItem>
+             
               <DropdownMenuItem>
                 <SettingsIcon />
                 Settings

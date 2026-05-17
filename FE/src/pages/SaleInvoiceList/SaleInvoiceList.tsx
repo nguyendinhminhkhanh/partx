@@ -48,6 +48,12 @@ interface SaleInvoice {
   totalAmount: number;
   imageUrl?: string;
   note?: string;
+  createdByUser?: {
+    _id: string;
+    fullName: string;
+    username: string;
+    avatar?: string;
+  };
   createdAt: string;
 }
 
@@ -546,6 +552,23 @@ export default function SaleInvoiceList() {
                       <p className="text-muted-foreground text-xs">Mã hóa đơn</p>
                       <p className="font-medium break-all text-xs">{selectedInvoice._id}</p>
                     </div>
+
+                    {selectedInvoice.createdByUser && (
+                      <div className="flex items-center gap-2 py-1.5 px-3 rounded-lg bg-muted/40 border">
+                        <div className="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center text-xs font-bold text-primary shrink-0">
+                          {selectedInvoice.createdByUser.fullName?.charAt(0)}
+                        </div>
+                        <div className="min-w-0">
+                          <p className="text-xs text-muted-foreground">Người tạo</p>
+                          <p className="text-sm font-medium truncate">
+                            {selectedInvoice.createdByUser.fullName}
+                            <span className="text-muted-foreground font-normal ml-1">
+                              @{selectedInvoice.createdByUser.username}
+                            </span>
+                          </p>
+                        </div>
+                      </div>
+                    )}
 
                     <div>
                       <p className="font-semibold mb-2">Danh sách sản phẩm</p>

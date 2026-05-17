@@ -43,6 +43,7 @@ const createInvoice = async (req, res) => {
       items: processedItems,
       totalAmount,
       createdBy,
+      createdByUser: req.user._id,
     });
 
     console.log("New Invoice Created:", newInvoice);
@@ -90,6 +91,7 @@ const getAllInvoice = async (req, res) => {
 
     const invoices = await InvoiceModel.find(filter)
       .populate("createdBy")
+      .populate("createdByUser", "fullName username avatar")
       .sort({ createdAt: -1 });
 
     res.send({ success: 1, data: invoices });
@@ -105,7 +107,9 @@ const getAllInvoice = async (req, res) => {
 //[GET] /api/invoice/:id
 const getInvoiceById = async (req, res) => {
   const { id } = req.params;
-  const invoice = await InvoiceModel.findById(id).populate("createdBy");
+  const invoice = await InvoiceModel.findById(id)
+    .populate("createdBy")
+    .populate("createdByUser", "fullName username avatar");
   if (!invoice) {
     return res
       .status(404)

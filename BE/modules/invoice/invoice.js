@@ -20,6 +20,10 @@ const InvoiceSchema = mongoose.Schema(
       ref: "SaleUnit",
       required: true,
     },
+    createdByUser: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+    },
   },
   {
     timestamps: true,
