@@ -13,8 +13,15 @@ const app = express();
 async function main() {
   await mongoose.connect(process.env.MONGODB_URI);
   console.log("Connected to MongoDB");
+  const port = process.env.PORT || 3000;
 
-  app.use(cors());
+  app.use(cors({
+  origin: [
+    'http://localhost:5173',
+    'https://partx-ipaf.onrender.com'
+  ],
+  credentials: true
+}))
   app.use(express.json());
   app.use("/api/auth", AuthRouter);
   app.use("/api/upload", UploadRouter);
@@ -23,8 +30,8 @@ async function main() {
   app.use("/api/saleinvoice", SaleInvoiceRouter);
 
   app.use(errorHandler);
-  app.listen(3000, () => {
-    console.log("Server is running on http://localhost:3000");
+  app.listen(port, () => {
+    console.log(`Server is running on http://localhost:${port}`);
   });
 }
 

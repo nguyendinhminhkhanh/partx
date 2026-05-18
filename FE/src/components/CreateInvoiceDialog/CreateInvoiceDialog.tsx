@@ -45,11 +45,80 @@ export default function CreateInvoiceDialog({ children }: Props) {
   const [preview, setPreview] = useState(null);
   const [imageFile, setImageFile] = useState<File | null>(null);
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const MAX_SIZE_MB = 5; // Giới hạn sau khi nén
+  const MAX_SIZE_BYTES = MAX_SIZE_MB * 1024 * 1024;
+
+  // Nén ảnh bằng Canvas nếu vượt quá giới hạn
+  const compressImage = (file: File): Promise<File> => {
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      const url = URL.createObjectURL(file);
+      img.onload = () => {
+        URL.revokeObjectURL(url);
+        let { width, height } = img;
+
+        // Giảm kích thước nếu quá lớn
+        const MAX_DIM = 1920;
+        if (width > MAX_DIM || height > MAX_DIM) {
+          const ratio = Math.min(MAX_DIM / width, MAX_DIM / height);
+          width = Math.round(width * ratio);
+          height = Math.round(height * ratio);
+        }
+
+        const canvas = document.createElement("canvas");
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext("2d");
+        if (!ctx) return reject(new Error("Không thể xử lý ảnh"));
+        ctx.drawImage(img, 0, 0, width, height);
+
+        // Thử nén với quality giảm dần cho đến khi đủ nhỏ
+        const tryCompress = (quality: number) => {
+          canvas.toBlob(
+            (blob) => {
+              if (!blob) return reject(new Error("Không thể nén ảnh"));
+              if (blob.size <= MAX_SIZE_BYTES || quality <= 0.1) {
+                const compressed = new File([blob], file.name, { type: "image/jpeg" });
+                resolve(compressed);
+              } else {
+                tryCompress(Math.max(quality - 0.1, 0.1));
+              }
+            },
+            "image/jpeg",
+            quality,
+          );
+        };
+        tryCompress(0.8);
+      };
+      img.onerror = () => reject(new Error("Không thể đọc file ảnh"));
+      img.src = url;
+    });
+  };
+
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    setImageFile(file);
-    setPreview(URL.createObjectURL(file));
+
+    const WARN_SIZE_MB = 10;
+    if (file.size > WARN_SIZE_MB * 1024 * 1024) {
+      toast.warning(`Ảnh lớn hơn ${WARN_SIZE_MB}MB, đang nén lại...`);
+    }
+
+    try {
+      const processed = file.size > MAX_SIZE_BYTES
+        ? await compressImage(file)
+        : file;
+
+      const sizeMB = (processed.size / 1024 / 1024).toFixed(1);
+      if (processed !== file) {
+        toast.success(`Đã nén ảnh xuống còn ${sizeMB}MB`);
+      }
+
+      setImageFile(processed);
+      setPreview(URL.createObjectURL(processed));
+    } catch (err) {
+      toast.error("Không thể xử lý ảnh, vui lòng chọn ảnh khác");
+    }
   };
 
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -143,24 +212,16 @@ export default function CreateInvoiceDialog({ children }: Props) {
   };
 
   // upload image function cloudinary
-  const uploadImage = async () => {
+  const uploadImage = async (): Promise<string | undefined> => {
+    if (!imageFile) return undefined;
     const formData = new FormData();
-    if (imageFile) {
-      formData.append("file", imageFile);
-      try {
-        const res = await request({
-          method: "POST",
-          url: "/upload",
-          data: formData,
-        });
-        return res.url;
-      } catch (error) {
-        console.log(error);
-      }
-      // console.log("Image name:", imageFile.name);
-      // console.log("Image size:", imageFile.size);
-      // console.log("Image type:", imageFile.type);
-    }
+    formData.append("file", imageFile);
+    const res = await request({
+      method: "POST",
+      url: "/upload",
+      data: formData,
+    });
+    return res.url;
   };
 
   const onSubmit = async (data: Invoice) => {
