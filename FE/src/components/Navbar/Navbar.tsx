@@ -15,7 +15,6 @@ import {
   SheetDescription,
 } from "../../components/ui/sheet";
 import {
-  CreditCardIcon,
   LogOutIcon,
   Menu,
   SettingsIcon,

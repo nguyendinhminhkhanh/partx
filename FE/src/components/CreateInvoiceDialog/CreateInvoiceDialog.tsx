@@ -40,9 +40,13 @@ interface Invoice {
   };
   createdAt: string;
 }
+interface Props {
+  children: React.ReactNode;
+}
+
 export default function CreateInvoiceDialog({ children }: Props) {
   const fileInputRef = useRef<HTMLInputElement | null>(null);
-  const [preview, setPreview] = useState(null);
+  const [preview, setPreview] = useState<string | null>(null);
   const [imageFile, setImageFile] = useState<File | null>(null);
 
   const MAX_SIZE_MB = 5; // Giới hạn sau khi nén
@@ -117,6 +121,7 @@ export default function CreateInvoiceDialog({ children }: Props) {
       setImageFile(processed);
       setPreview(URL.createObjectURL(processed));
     } catch (err) {
+      console.error(err);
       toast.error("Không thể xử lý ảnh, vui lòng chọn ảnh khác");
     }
   };
@@ -367,7 +372,7 @@ export default function CreateInvoiceDialog({ children }: Props) {
               ) : (
                 <button
                   type="button"
-                  onClick={() => fileInputRef.current.click()}
+                  onClick={() => fileInputRef.current?.click()}
                 >
                   <label
                     htmlFor="image"
