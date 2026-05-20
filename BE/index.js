@@ -18,7 +18,7 @@ async function main() {
   app.use(cors({
   origin: [
     'http://localhost:5173',
-    'https://partx-ipaf.onrender.com'
+    'https://partx.vercel.app'
   ],
   credentials: true
 }))
