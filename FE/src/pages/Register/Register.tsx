@@ -32,11 +32,13 @@ export default function Register() {
         url: "/auth/register",
         data: { username, password, fullName, email, phone },
       });
-      toast.success("Đăng kí thành công!");
-      console.log(res);
-      navigator("/");
-    } catch (error) {
-      alert("Đăng kí thất bại ");
+      if (res.success) {
+        toast.success("Đăng ký thành công! Vui lòng chờ admin duyệt tài khoản trước khi đăng nhập.");
+        navigator("/login");
+      }
+    } catch (error: any) {
+      const message = error?.response?.data?.message || "Đăng ký thất bại.";
+      toast.error(message);
       console.log(error);
     }
   };

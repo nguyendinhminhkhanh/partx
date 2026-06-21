@@ -15,6 +15,12 @@ const UserSchema = mongoose.Schema(
       default: "staff",
     },
 
+    status: {
+      type: String,
+      enum: ["pending", "active"],
+      default: "pending",
+    },
+
     createdBy: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
