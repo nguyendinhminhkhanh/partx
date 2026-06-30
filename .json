@@ -1,0 +1,219 @@
+{
+  "_id": {
+    "$oid": "69a94897b92503b929b23a61"
+  },
+  "imageUrl": "https://res.cloudinary.com/dxsum70nx/image/upload/v1772701846/partx_uploads/ctemw2xoipaylgejnh8u.jpg",
+  "productName": "MAINBOARD ASUS PRIME Z790-P WIFI-CSM DDR5_3",
+  "quantity": 1,
+  "price": 3600000,
+  "totalAmount": 3600000,
+  "guarantee": 36,
+  "createdBy": {
+    "$oid": "6980c2eb6d2dd97b543839d0"
+  },
+  "createdAt": {
+    "$date": "2026-03-05T09:10:47.190Z"
+  },
+  "updatedAt": {
+    "$date": "2026-03-05T09:10:47.190Z"
+  },
+  "__v": 0
+}
+{
+  "_id": {
+    "$oid": "69a95a94da598b038eb0259a"
+  },
+  "imageUrl": "https://res.cloudinary.com/dxsum70nx/image/upload/v1772706452/partx_uploads/z7myu27bkotm2g0pqua4.jpg",
+  "productName": "MAINBOARD ASROCK B760M PRO WIFI_2",
+  "quantity": 1,
+  "price": 2300000,
+  "totalAmount": 2300000,
+  "guarantee": 36,
+  "createdBy": {
+    "$oid": "697cd97056fe487201fc447b"
+  },
+  "createdAt": {
+    "$date": "2026-03-05T10:27:32.643Z"
+  },
+  "updatedAt": {
+    "$date": "2026-03-05T10:27:32.643Z"
+  },
+  "__v": 0
+}
+
+{
+  "_id": {
+    "$oid": "69aa3141da598b038eb025d4"
+  },
+  "imageUrl": "https://res.cloudinary.com/dxsum70nx/image/upload/v1772761408/partx_uploads/engzgx9b7fgtdkpeqwdn.jpg",
+  "productName": "Msi RTX 3060 12G",
+  "quantity": 1,
+  "price": 7200000,
+  "totalAmount": 7200000,
+  "guarantee": 36,
+  "createdBy": {
+    "$oid": "69b0196197f6bf5586f96121"
+  },
+  "createdAt": {
+    "$date": "2026-03-06T01:43:29.387Z"
+  },
+  "updatedAt": {
+    "$date": "2026-03-06T01:43:29.387Z"
+  },
+  "__v": 0
+}
+
+
+{
+  "_id": {
+    "$oid": "69aa566eda598b038eb02673"
+  },
+  "imageUrl": "https://res.cloudinary.com/dxsum70nx/image/upload/v1772770925/partx_uploads/zcuysmvd1lnx7rppnwua.jpg",
+  "productName": "Main Asus H510M-K",
+  "quantity": 10,
+  "price": 1650000,
+  "totalAmount": 16500000,
+  "guarantee": 36,
+  "createdBy": {
+    "$oid": "6980c2eb6d2dd97b543839d0"
+  },
+  "createdAt": {
+    "$date": "2026-03-06T04:22:06.185Z"
+  },
+  "updatedAt": {
+    "$date": "2026-03-06T04:22:06.185Z"
+  },
+  "__v": 0
+}
+
+{
+  "_id": {
+    "$oid": "69ae9cb26e733a4ee4214c97"
+  },
+  "imageUrl": "https://res.cloudinary.com/dxsum70nx/image/upload/v1773051056/partx_uploads/ryeq4co3gftjjjuclizf.jpg",
+  "productName": "VGA Colorful GeForce RTX 5060 Gaming DUO 8GB-V GDDR7",
+  "quantity": 1,
+  "price": 8550000,
+  "totalAmount": 8550000,
+  "guarantee": 36,
+  "createdBy": {
+    "$oid": "69aa3c36da598b038eb0266a"
+  },
+  "createdAt": {
+    "$date": "2026-03-09T10:10:58.326Z"
+  },
+  "updatedAt": {
+    "$date": "2026-03-09T10:10:58.326Z"
+  },
+  "__v": 0
+}
+
+{
+  "_id": {
+    "$oid": "69b0340c597cfa4e7c81f19b"
+  },
+  "imageUrl": "https://res.cloudinary.com/dxsum70nx/image/upload/v1773155286/partx_uploads/vhahra423zmgxmgz7qw9.jpg",
+  "productName": "Thinkpad T14S",
+  "quantity": 1,
+  "price": 14000000,
+  "totalAmount": 14000000,
+  "guarantee": 1,
+  "createdBy": {
+    "$oid": "697cd97056fe487201fc447b"
+  },
+  "createdAt": {
+    "$date": "2026-03-10T15:09:00.858Z"
+  },
+  "updatedAt": {
+    "$date": "2026-03-10T15:09:00.858Z"
+  },
+  "__v": 0
+}
+
+{
+  "_id": {
+    "$oid": "69b17420597cfa4e7c81f1da"
+  },
+  "imageUrl": "https://res.cloudinary.com/dxsum70nx/image/upload/v1773237226/partx_uploads/rp4v4jpi1dclfqqkefoa.jpg",
+  "productName": "Nguôn máy tính Xigmatek X-Power III - 650",
+  "quantity": 10,
+  "price": 695000,
+  "totalAmount": 6950000,
+  "guarantee": 36,
+  "createdBy": {
+    "$oid": "6980c2eb6d2dd97b543839d0"
+  },
+  "createdAt": {
+    "$date": "2026-03-11T13:54:40.770Z"
+  },
+  "updatedAt": {
+    "$date": "2026-03-11T13:54:40.770Z"
+  },
+  "__v": 0
+}
+
+{
+  "_id": {
+    "$oid": "69b1745c597cfa4e7c81f1e7"
+  },
+  "imageUrl": "https://res.cloudinary.com/dxsum70nx/image/upload/v1773237286/partx_uploads/crwsyejxybwikpqpl5sj.jpg",
+  "productName": "Vò máy tính Xigmatek MYX Air 3F",
+  "quantity": 10,
+  "price": 450000,
+  "totalAmount": 4500000,
+  "guarantee": 1,
+  "createdBy": {
+    "$oid": "6980c2eb6d2dd97b543839d0"
+  },
+  "createdAt": {
+    "$date": "2026-03-11T13:55:40.685Z"
+  },
+  "updatedAt": {
+    "$date": "2026-03-11T13:55:40.685Z"
+  },
+  "__v": 0
+}
+{
+  "_id": {
+    "$oid": "69b289909bff544d140d466c"
+  },
+  "imageUrl": "https://res.cloudinary.com/dxsum70nx/image/upload/v1773308303/partx_uploads/ae2jcrl8wblpasxkplp2.jpg",
+  "productName": "CPU Intel Core i5-12400F",
+  "quantity": 2,
+  "price": 2850000,
+  "totalAmount": 5700000,
+  "guarantee": 1,
+  "createdBy": {
+    "$oid": "69aea9dd6e733a4ee4214cb2"
+  },
+  "createdAt": {
+    "$date": "2026-03-12T09:38:24.908Z"
+  },
+  "updatedAt": {
+    "$date": "2026-03-12T09:38:24.908Z"
+  },
+  "__v": 0
+}
+{
+  "_id": {
+    "$oid": "69b28d519bff544d140d4694"
+  },
+  "imageUrl": "https://res.cloudinary.com/dxsum70nx/image/upload/v1773309264/partx_uploads/ep2hvxzssbvn5pa4dv7w.jpg",
+  "productName": "CPU Core I7 - 12700K",
+  "quantity": 1,
+  "price": 5500000,
+  "totalAmount": 5500000,
+  "guarantee": 1,
+  "createdBy": {
+    "$oid": "69aea9dd6e733a4ee4214cb2"
+  },
+  "createdAt": {
+    "$date": "2026-03-12T09:54:25.214Z"
+  },
+  "updatedAt": {
+    "$date": "2026-03-12T09:54:25.214Z"
+  },
+  "__v": 0
+}
+
+
