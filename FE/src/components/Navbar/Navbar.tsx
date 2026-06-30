@@ -50,6 +50,17 @@ const NAV_ITEMS = [
   },
 ];
 
+// Chỉ hiển thị với admin
+const ADMIN_NAV_ITEMS = [
+  {
+    label: "Tài khoản",
+    children: [
+      { label: "Danh sách nhân viên", to: "/accounts" },
+      { label: "Tài khoản chờ duyệt", to: "/accounts?status=pending" },
+    ],
+  },
+];
+
 export default function Navbar() {
   const auth = useContext(AuthContext);
   const [open, setOpen] = useState(false);
@@ -60,6 +71,11 @@ export default function Navbar() {
     throw new Error("AuthContext must be used within AuthProvider");
   }
   const { user, setUser } = auth;
+
+  // Merge nav items dựa theo role
+  const visibleNavItems = user?.role === "admin"
+    ? [...NAV_ITEMS, ...ADMIN_NAV_ITEMS]
+    : NAV_ITEMS;
   // console.log("User in Navbar:", user);
 
   const isParentActive = (children?: { to: string }[]) => {
@@ -83,7 +99,7 @@ export default function Navbar() {
 
         {/* Desktop menu */}
         <nav className="hidden md:flex items-center gap-6">
-          {NAV_ITEMS.map((item) =>
+          {visibleNavItems.map((item) =>
             item.children ? (
               <DropdownMenu key={item.label}>
                 <DropdownMenuTrigger
@@ -158,9 +174,11 @@ export default function Navbar() {
                 <Link to="/profile">Profile</Link>
               </DropdownMenuItem>
              
-              <DropdownMenuItem>
-                <SettingsIcon />
-                Settings
+              <DropdownMenuItem asChild>
+                <Link to="/settings" className="flex items-center gap-2">
+                  <SettingsIcon />
+                  Settings
+                </Link>
               </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem onClick={handleLogout} variant="destructive">
@@ -204,7 +222,7 @@ export default function Navbar() {
               </Link>
             </SheetHeader>
             <div className="flex flex-col gap-4">
-              {NAV_ITEMS.map((item) =>
+              {visibleNavItems.map((item) =>
                 item.children ? (
                   <Accordion
                     key={item.label}

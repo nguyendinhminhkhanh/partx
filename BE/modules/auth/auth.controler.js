@@ -13,18 +13,24 @@ const login = async (req, res) => {
   if (!existingUser) {
     throw new HttpError("Username không tồn tại", 404);
   }
+
+  if (!username || !password) {
+    throw new HttpError("Username và Password không được để trống", 422);
+  }
+
+  // Kiểm tra tài khoản đã được duyệt chưa
+  // Tài khoản cũ không có status (undefined) vẫn cho đăng nhập bình thường
+  if (existingUser.status === "pending") {
+    throw new HttpError("Tài khoản đang chờ admin duyệt", 403);
+  }
+
   const hashPassword = existingUser.password;
   const isPasswordValid = await bcrypt.compare(password, hashPassword);
   if (!isPasswordValid) {
     throw new HttpError("Đăng nhập thất bại", 401);
   }
 
-  if (!username || !password) {
-    throw new HttpError("Username và Password không được để trống", 422);
-  }
-
   const token = tokenProvider.sign(existingUser._id);
-  console.log("Generated Token:", token);
   res.send({
     success: 1,
     data: {
@@ -34,6 +40,7 @@ const login = async (req, res) => {
       email: existingUser.email,
       phone: existingUser.phone,
       role: existingUser.role,
+      status: existingUser.status,
       avatar: existingUser.avatar || DEFAULT_AVATAR,
       createdAt: existingUser.createdAt,
       token: token,
@@ -53,11 +60,11 @@ const register = async (req, res) => {
     throw new HttpError("Username đã tồn tại", 409);
   }
 
-  if (!password && password.length < 6) {
-    throw new HttpError("Password cầm ít nhất 6 kí tự", 422);
+  if (!password || password.length < 6) {
+    throw new HttpError("Password cần ít nhất 6 kí tự", 422);
   }
 
-  const salt = await bcrypt.genSalt(10); // mã hoá
+  const salt = await bcrypt.genSalt(10);
   const hashPassword = await bcrypt.hash(password, salt);
 
   const newUser = await UserModel.create({
@@ -67,22 +74,21 @@ const register = async (req, res) => {
     email,
     phone,
     avatar: DEFAULT_AVATAR,
+    status: "pending", // chờ admin duyệt
   });
 
-  const token = tokenProvider.sign(newUser._id);
-  console.log("Generated Token:", token);
-  res.send({
+  res.status(201).send({
     success: 1,
+    message: "Đăng ký thành công. Vui lòng chờ admin duyệt tài khoản.",
     data: {
       _id: newUser._id,
       username: newUser.username,
       fullName: newUser.fullName,
       email: newUser.email,
       phone: newUser.phone,
-      createdAt: newUser.createdAt,
       role: newUser.role,
-      avatar: newUser.avatar,
-      token: token,
+      status: newUser.status,
+      createdAt: newUser.createdAt,
     },
   });
 };
@@ -156,4 +162,38 @@ const changePassword = async (req, res) => {
   res.send({ success: 1, message: "Đổi mật khẩu thành công" });
 };
 
-module.exports = { login, register, getUserInfor, updateProfile, changePassword };
+// [GET] /api/auth/accounts — Lấy danh sách tài khoản (admin only)
+// Query: ?status=pending|active|all
+const getAccounts = async (req, res) => {
+  const { status } = req.query;
+  const filter = status && status !== "all" ? { status } : {};
+  const users = await UserModel.find(filter)
+    .select("-password")
+    .sort({ createdAt: -1 });
+  res.send({ success: 1, data: users });
+};
+
+// [PUT] /api/auth/accounts/:id/status — Duyệt hoặc từ chối tài khoản (admin only)
+const updateAccountStatus = async (req, res) => {
+  const { id } = req.params;
+  const { status } = req.body;
+
+  if (!["active", "pending"].includes(status)) {
+    throw new HttpError("Status không hợp lệ", 400);
+  }
+
+  const updatedUser = await UserModel.findByIdAndUpdate(
+    id,
+    { status },
+    { new: true }
+  ).select("-password");
+
+  if (!updatedUser) {
+    throw new HttpError("Không tìm thấy tài khoản", 404);
+  }
+
+  const message = status === "active" ? "Duyệt tài khoản thành công" : "Đã từ chối tài khoản";
+  res.send({ success: 1, message, data: updatedUser });
+};
+
+module.exports = { login, register, getUserInfor, updateProfile, changePassword, getAccounts, updateAccountStatus };
