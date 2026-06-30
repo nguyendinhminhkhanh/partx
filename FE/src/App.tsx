@@ -15,6 +15,7 @@ import request from "./api/request";
 import SaleUnitList from "./pages/SaleUnitList";
 import SaleInvoiceList from "./pages/SaleInvoiceList";
 import AccountManagement from "./pages/AccountManagement";
+import Settings from "./pages/Settings";
 function App() {
   const [status, setStatus] = useState("idle");
   const [user, setUser] = useState<User | null>(null);
@@ -78,6 +79,7 @@ function App() {
           <Route path="/saleunitlist" element={<SaleUnitList />} />
           <Route path="/saleinvoicelist" element={<SaleInvoiceList />} />
           <Route path="/accounts" element={<AccountManagement />} />
+          <Route path="/settings" element={<Settings />} />
 
           {/* <Route path="/pagetest" element={<PageTest></PageTest>}></Route> */}
         </Route>

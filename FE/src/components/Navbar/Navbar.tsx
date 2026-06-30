@@ -174,9 +174,11 @@ export default function Navbar() {
                 <Link to="/profile">Profile</Link>
               </DropdownMenuItem>
              
-              <DropdownMenuItem>
-                <SettingsIcon />
-                Settings
+              <DropdownMenuItem asChild>
+                <Link to="/settings" className="flex items-center gap-2">
+                  <SettingsIcon />
+                  Settings
+                </Link>
               </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem onClick={handleLogout} variant="destructive">
